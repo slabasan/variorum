@@ -136,6 +136,21 @@ struct platform
     /// @return Error code.
     int (*dump_turbo)(void);
 
+    int (*dump_pstate)(void);
+
+    int (*set_each_package_pstate)(int pstate);
+
+    int (*monitoring)(FILE *fd,
+                      int sampleTime,
+                      int interval,
+                      int continuous);
+
+    int (*aperf_monitoring)(FILE *fd,
+                            int sampleTime);
+
+    int (*set_each_socket_power_limit_tw)(int socket_power_limit,
+                                           double time_window);
+
     /******************************/
     /* Platform-Specific Topology */
     /******************************/

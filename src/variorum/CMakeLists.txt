@@ -7,6 +7,7 @@ set(variorum_headers
   variorum.h
   variorum_cpuid.h
   variorum_error.h
+  variorum_timers.h
   )
 
 set(variorum_sources
@@ -15,6 +16,7 @@ set(variorum_sources
   variorum.c
   variorum_cpuid.c
   variorum_error.c
+  variorum_timers.c
   )
 
 set(variorum_deps ""

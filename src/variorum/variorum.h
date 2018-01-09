@@ -14,6 +14,17 @@ int tester(void);
 /// @return Error code.
 int set_each_socket_power_limit(int socket_power_limit);
 
+/// @brief Set identical power limits to all sockets within the node.
+///
+/// @param [in] socket_power_limit Desired power limit for each socket.
+///
+/// @param [in] time_window Desired RAPL time window. If passed 0, default of 1
+///             second is used.
+///
+/// @return Error code.
+int set_each_socket_power_limit_tw(int socket_power_limit,
+                                   double time_window);
+
 ///// @brief Set a power limit to the node.
 /////
 ///// @param [in] node_power_limit Desired power limit for the node.
@@ -137,6 +148,20 @@ int enable_turbo(void);
 /////
 ///// @return Error code.
 int disable_turbo(void);
+
+int monitoring(FILE *outfile,
+               int sampleTime,
+               int interval,
+               int continuous);
+
+int aperf_monitoring(FILE *outfile,
+                     int sampleTime);
+
+int set_each_socket_pstate(int pstate);
+
+int dump_pstate(void);
+
+int dump_fixed_counters(void);
 
 ///* Do we need these? */
 //int dump_cap_package_frequency(void);

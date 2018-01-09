@@ -1,7 +1,12 @@
 #include <stdio.h>
+#include <time.h>
 
 #include <config_architecture.h>
 #include <variorum.h>
+#include <variorum_timers.h>
+#include <Intel/Broadwell_4F.h>
+
+#define BILLION 1000000000L
 
 int tester(void)
 {
@@ -403,4 +408,110 @@ int disable_turbo(void)
 		return -1;
 	}
 	return err;
+}
+
+int aperf_monitoring(FILE *outfile, int sampleTime)
+{
+    int err = 0;
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    err = g_platform.aperf_monitoring(outfile, sampleTime);
+    if (err)
+    {
+        return -1;
+    }
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
+
+int monitoring(FILE *outfile, int sampleTime, int interval, int continuous)
+{
+    int err = 0;
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    err = g_platform.monitoring(outfile, sampleTime, interval, continuous);
+    if (err)
+    {
+        return -1;
+    }
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
+
+int set_each_socket_power_limit_tw(int socket_power_limit, double time_window)
+{
+    int err = 0;
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    err = g_platform.set_each_socket_power_limit_tw(socket_power_limit, time_window);
+    if (err)
+    {
+        return -1;
+    }
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
+
+int set_each_socket_pstate(int pstate)
+{
+    int err = 0;
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    err = g_platform.set_each_socket_pstate(pstate);
+    if (err == -1)
+    {
+        return -1;
+    }
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+
+}
+
+int dump_fixed_counters(void)
+{
+    int err = 0;
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    err = g_platform.dump_fixed_counters(0);
+    if (err)
+    {
+        return -1;
+    }
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    return err;
 }
