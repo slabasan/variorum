@@ -175,6 +175,81 @@ void print_clocks_data(FILE *writedest, off_t msr_aperf, off_t msr_mperf, off_t 
     }
 }
 
+void dump_p_state(FILE *writedest, off_t msr_perf_status)
+{
+    static int procs = 0;
+    static struct perf_data *cd;
+    int sock_idx;
+
+    if (!procs)
+    {   
+        variorum_set_topology(&procs, NULL, NULL);
+        perf_storage(&cd, msr_perf_status);
+    }   
+    read_batch(PERF_DATA);
+    for (sock_idx = 0; sock_idx < procs; sock_idx++)
+    {   
+        unsigned long long perf_state = *cd->perf_status[sock_idx] & 0xFFFF;
+        double pstate_actual = perf_state/256;
+        fprintf(writedest, "Socket %d:\n", sock_idx);
+        fprintf(writedest, "  bits            = %lx\n", *cd->perf_status[sock_idx]);
+        fprintf(writedest, "  current p-state = %.0f MHz\n", pstate_actual*100);
+    }   
+}
+
+void read_clocks_data(FILE *writedest, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, off_t msr_perf_status)
+{
+    static struct clocks_data *cd;
+    static struct perf_data *pd;
+    static int init = 0;
+    int i, j, k;
+    int nsockets, ncores, nthreads;
+    int idx;
+    char hostname[1024];
+
+    variorum_set_topology(&nsockets, &ncores, &nthreads);
+    gethostname(hostname, 1024);
+    if (!init)
+    {
+        clocks_storage(&cd, msr_aperf, msr_mperf, msr_tsc);
+        perf_storage(&pd, msr_perf_status);
+        init = 1;
+    }
+    read_batch(CLOCKS_DATA);
+    read_batch(PERF_DATA);
+    for (i = 0; i < nsockets; i++)
+    {
+        for (j = 0; j < ncores/nsockets; j++)
+        {
+            for (k = 0; k < nthreads/ncores; k++)
+            {
+                idx = (k * nsockets * (ncores/nsockets)) + (i * (ncores/nsockets)) + j;
+                fprintf(writedest, "%lu, %lu, %lu, %lu\n",
+                        *cd->aperf[idx], *cd->mperf[idx], *cd->tsc[idx], MASK_VAL(*pd->perf_status[i], 15, 8));
+            }
+        }
+    }
+}
+
+void set_p_state(unsigned socket, unsigned core, int pstate, off_t msr_perf_ctl)
+{
+    static int procs = 0;
+    static struct perf_data *cd;
+
+    uint64_t write_val = pstate << 8;
+    //if (!procs)
+    //{
+    //    printf("\nno procs\n");
+    //    variorum_set_topology(&procs, NULL, NULL);
+    //    perf_storage_ctl(&cd, msr_perf_ctl);
+    //}
+    //printf("socket: %d, pstate: %d %x\n", socket, pstate, shiftedpstate);
+    //*cd->perf_ctl[socket] = pstate;
+
+    write_msr_by_coord(socket, core, 0, msr_perf_ctl, write_val);
+    //write_batch(USR_BATCH1);
+}
+
 #if 0
 void print_clocks_data_socket(FILE *writedest, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, off_t msr_perf_status, off_t msr_platform_info)
 {

@@ -112,19 +112,34 @@ void print_clocks_data(FILE *writedest,
                        off_t msr_platform_info,
                        enum ctl_domains_e control_domain);
 
-///// @brief Print current p-state.
-/////
-///// @param [in] writedest File stream where output will be written to.
-//void dump_p_state(FILE *writedest);
-//
-///// @brief Request new current p-state.
-/////
-///// @param [in] socket Unique socket/package identifier.
-/////
-///// @param [in] pstate Desired p-state.
-//void set_p_state(unsigned socket,
-//                 uint64_t pstate);
-//
+/// @brief Print clocks data in minimal format
+///
+/// @param [in] writedest File stream where output will be written to.
+/// @param [in] msr_aperf Unique MSR address for IA32_APERF.
+/// @param [in] msr_mperf Unique MSR address for IA32_MPERF.
+/// @param [in] msr_tsc Unique MSR address for IA32_TIME_STAMP_COUNTER.
+/// @param [in] msr_perf_status Unique MSR address for IA32_PERF_STATUS.
+void read_clocks_data(FILE *writedest,
+                      off_t msr_aperf,
+                      off_t msr_mperf,
+                      off_t msr_tsc,
+                      off_t msr_perf_status);
+
+/// @brief Print current p-state.
+///
+/// @param [in] writedest File stream where output will be written to.
+void dump_p_state(FILE *writedest,
+                  off_t msr_perf_status);
+
+/// @brief Request new current p-state.
+///
+/// @param [in] socket Unique socket/package identifier.
+///
+/// @param [in] pstate Desired p-state.
+void set_p_state(unsigned socket,
+                 uint64_t pstate,
+                 off_t msr_perf_ctl);
+
 ///****************************************/
 ///* Software Controlled Clock Modulation */
 ///****************************************/
