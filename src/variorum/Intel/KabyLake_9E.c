@@ -213,7 +213,7 @@ int fm_06_9e_get_power(int long_ver)
     return 0;
 }
 
-int fm_06_9e_monitoring(void)
+int fm_06_9e_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
 {
     static int init = 0;
 

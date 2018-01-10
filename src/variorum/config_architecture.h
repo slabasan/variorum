@@ -138,7 +138,7 @@ struct platform
 
     int (*dump_pstate)(void);
 
-    int (*set_each_package_pstate)(int pstate);
+    int (*set_each_socket_pstate)(int pstate);
 
     int (*monitoring)(FILE *fd,
                       int sampleTime,
@@ -150,6 +150,8 @@ struct platform
 
     int (*set_each_socket_power_limit_tw)(int socket_power_limit,
                                            double time_window);
+
+    int (*dump_fixed_counters)(int long_ver);
 
     /******************************/
     /* Platform-Specific Topology */

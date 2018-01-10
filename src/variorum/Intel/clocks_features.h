@@ -131,15 +131,20 @@ void read_clocks_data(FILE *writedest,
 void dump_p_state(FILE *writedest,
                   off_t msr_perf_status);
 
-/// @brief Request new current p-state.
-///
-/// @param [in] socket Unique socket/package identifier.
-///
-/// @param [in] pstate Desired p-state.
+
 void set_p_state(unsigned socket,
-                 uint64_t pstate,
+                 unsigned core,
+                 int pstate, 
                  off_t msr_perf_ctl);
 
+///// @brief Request new current p-state.
+/////
+///// @param [in] socket Unique socket/package identifier.
+/////
+///// @param [in] pstate Desired p-state.
+//void set_p_state(unsigned socket,
+//                 uint64_t pstate);
+//
 ///****************************************/
 ///* Software Controlled Clock Modulation */
 ///****************************************/

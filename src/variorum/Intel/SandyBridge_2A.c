@@ -243,7 +243,7 @@ int fm_06_2a_get_turbo_status(void)
     return 0;
 }
 
-int fm_06_2a_monitoring(void)
+int fm_06_2a_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
 {
     static int init = 0;
 

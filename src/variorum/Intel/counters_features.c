@@ -901,7 +901,7 @@ int aperf_monitor(FILE *outfile)
     return 0;
 }
 
-void mon_storage(struct perf_data **pd, struct clocks_data **cd, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, struct fixed_counter **ctr0, struct fixed_counter **ctr1, struct fixed_counter **ctr2, off_t *msrs_fixed_ctrs, off_t *msr_perf_status)
+void mon_storage(struct perf_data **pd, struct clocks_data **cd, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, struct fixed_counter **ctr0, struct fixed_counter **ctr1, struct fixed_counter **ctr2, off_t *msrs_fixed_ctrs, off_t msr_perf_status)
 {
     static int init = 0;
     static struct clocks_data d;
