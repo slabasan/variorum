@@ -260,3 +260,32 @@ int delta_rapl_data(void);
 //                        int id,
 //                        off_t msr,
 //                        double *val);
+//
+
+void read_power_data(FILE *writedest,
+                     off_t msr_power_limit,
+                     off_t msr_rapl_unit,
+                     off_t msr_pkg_energy_status,
+                     off_t msr_dram_energy_status);
+
+/// @brief Determine the steps necessary to set the user-supplied package-level
+/// power limit(s).
+///
+/// If a pointer is null, do nothing. If the bit vector is nonzero, translate
+/// the bit vector to watts and seconds and write the bit vector to the msr. If
+/// the bit vector is zero, translate the watts and seconds to the appropriate
+/// bit vector and write the bit vector to the msr.
+///
+/// @param [in] socket Unique socket/package identifier.
+///
+/// @param [in] limit1 Data for lower power limit 1.
+///
+/// @param [in] limit2 Data for upper power limit 2.
+///
+/// @return 0 if successful, else -1 if rapl_storage() fails or if package
+/// RAPL domain power limit is not supported on the platform.
+int set_pkg_rapl_limit(const unsigned socket,
+                       struct rapl_limit *limit1,
+                       struct rapl_limit *limit2,
+                       off_t msr_power_limit,
+                       off_t msr_rapl_unit);

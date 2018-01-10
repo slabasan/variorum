@@ -1,13 +1,16 @@
+#include <fcntl.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <power_features.h>
 #include <config_architecture.h>
 #include <msr_core.h>
 #include <variorum_error.h>
+#include <variorum_timers.h>
 
 static int translate(const unsigned socket, uint64_t *bits, double *units, int type, off_t msr)
 {
@@ -962,4 +965,113 @@ int read_rapl_data(off_t msr_rapl_power_unit, off_t msr_pkg_energy_status, off_t
     }
     init = 1;
     return 0;
+}
+
+void read_power_data(FILE *writedest, off_t msr_power_limit, off_t msr_rapl_unit, off_t msr_pkg_energy_status, off_t msr_dram_energy_status)
+{
+    static int init = 0;
+    static struct rapl_data *rapl = NULL;
+    static struct timeval start;
+    int nsockets, ncores, nthreads;
+    struct timeval now;
+    char hostname[1024];
+    int i, j, k, idx;
+
+    gethostname(hostname, 1024);
+    variorum_set_topology(&nsockets, &ncores, &nthreads);
+
+    get_power(msr_rapl_unit, msr_pkg_energy_status, msr_dram_energy_status);
+
+    if (!init)
+    {
+        gettimeofday(&start, NULL);
+        rapl_storage(&rapl);
+    }
+    gettimeofday(&now, NULL);
+    for (i = 0; i < nsockets; i++)
+    {
+        for (j = 0; j < ncores/nsockets; j++)
+        {
+            for (k = 0; k < nthreads/ncores; k++)
+            {
+                idx = (k * nsockets * (ncores/nsockets)) + (i * (ncores/nsockets)) + j;
+                fprintf(writedest, " %lf, %lf,", rapl->pkg_joules[i], rapl->pkg_watts[i]);
+            }
+        }
+    }
+}
+
+/// @todo How is this different than set_package_power_limit()
+int set_pkg_pwr_lim(const unsigned socket, int package_power_lim, off_t msr_power_lim, off_t msr_rapl_unit, double time_window)
+{
+    int ret = 0;
+    struct rapl_limit *limit1 = (struct rapl_limit *) malloc(sizeof(struct rapl_limit));
+
+    limit1->watts = package_power_lim;
+    limit1->bits = 0;
+    limit1->translate_bits = 0;
+    /* User has passed in a value for the time window. */
+    if (time_window != 0)
+    {
+        limit1->seconds = time_window;
+    }
+    /* No value passed, set as default. */
+    else
+    {
+        limit1->seconds = 1;
+    }
+    set_pkg_rapl_limit(socket, limit1, NULL, msr_power_lim, msr_rapl_unit);
+
+    free(limit1);
+    return ret;
+}
+
+/// @todo Rename this function to imply setting both power limits
+int set_pkg_rapl_limit(const unsigned socket, struct rapl_limit *limit1, struct rapl_limit *limit2, off_t msr_power_limit, off_t msr_rapl_unit)
+{
+    uint64_t pkg_limit = 0;
+    static uint64_t *rapl_flags = NULL;
+    uint64_t currentval = 0;
+    int ret = 0;
+    sockets_assert(&socket, __LINE__, __FILE__);
+
+    if (rapl_flags == NULL)
+    {
+        if (rapl_storage(NULL))
+        {
+            return -1;
+        }
+    }
+
+    /* If there is only one limit, grab the other existing one. */
+    if (limit1 == NULL)
+    {
+        ret = read_msr_by_coord(socket, 0, 0, msr_power_limit, &currentval);
+        /* We want to keep the lower limit so mask off all other bits. */
+        pkg_limit |= currentval & 0x00000000FFFFFFFF;
+    }
+    else if (limit2 == NULL)
+    {
+        ret = read_msr_by_coord(socket, 0, 0, msr_power_limit, &currentval);
+        /* We want to keep the upper limit so mask off all other bits. */
+        pkg_limit |= currentval & 0xFFFFFFFF00000000;
+    }
+    if (calc_package_rapl_limit(socket, limit1, limit2, msr_rapl_unit))
+    {
+        return -1;
+    }
+    /* Enable the rapl limit (15 && 47) and turn on clamping (16 && 48). */
+    if (limit1 != NULL)
+    {
+        pkg_limit |= limit1->bits | (1LL << 15) | (1LL << 16);
+    }
+    if (limit2 != NULL)
+    {
+        pkg_limit |= limit2->bits | (1LL << 47) | (1LL << 48);
+    }
+    if (limit1 != NULL || limit2 != NULL)
+    {
+        ret += write_msr_by_coord(socket, 0, 0, msr_power_limit, pkg_limit);
+    }
+    return ret;
 }
