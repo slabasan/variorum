@@ -473,6 +473,28 @@ int set_each_socket_power_limit_tw(int socket_power_limit, double time_window)
     return err;
 }
 
+int dump_pstate(void)
+{
+    int err = 0;
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    err = g_platform.dump_pstate();
+    if (err == -1)
+    {
+        return -1;
+    }
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+
+}
+
 int set_each_socket_pstate(int pstate)
 {
     int err = 0;
