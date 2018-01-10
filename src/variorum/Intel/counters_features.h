@@ -358,4 +358,26 @@ void print_unc_counter_data(FILE *writedest,
                             off_t *msrs_pcu_pmon_evtsel,
                             off_t *msrs_pcu_pmon_ctrs);
 
+void read_fixed_counter_data(FILE *writedest, 
+                             off_t *msrs_fixed_ctrs, 
+                             off_t msr_perf_global_ctrl, 
+                             off_t msr_fixed_counter_ctrl, 
+                             off_t msr_power_limit, 
+                             off_t msr_rapl_unit, 
+                             off_t msr_pkg_energy_status, 
+                             off_t msr_dram_energy_status);
+
+void get_monitoring_data(FILE *writedest,
+                         off_t *msrs_fixed_ctrs, 
+                         off_t msr_perf_global_ctrl, 
+                         off_t msr_fixed_counter_ctrl, 
+                         off_t msr_power_limit, 
+                         off_t msr_rapl_unit, 
+                         off_t msr_pkg_energy_status, 
+                         off_t msr_dram_energy_status, 
+                         off_t msr_aperf, 
+                         off_t msr_mperf, 
+                         off_t msr_tsc, 
+                         off_t msr_perf_status);
+
 #endif

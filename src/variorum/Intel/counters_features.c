@@ -3,13 +3,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <counters_features.h>
+#include <clocks_features.h>
 #include <config_architecture.h>
 #include <msr_core.h>
+#include <power_features.h>
+#include <thermal_features.h>
+#include <variorum.h>
 #include <variorum_cpuid.h>
 #include <variorum_error.h>
+
+#define BILLION 1000000000L
+#define CHUNK_SIZE 100000
 
 int cpuid_num_pmc(void)
 {
@@ -832,4 +840,246 @@ void print_unc_counter_data(FILE *writedest, off_t *msrs_pcu_pmon_evtsel, off_t 
         fprintf(writedest, "_UNCORE_COUNTERS Host: %s Socket: %d c0: %lx c1: %lx c2: %lx c3: %lx\n",
                 hostname, i, *uc->c0[i], *uc->c1[i], *uc->c2[i], *uc->c3[i]);
     }
+}
+
+void init_aperf(struct clocks_data **cd, int nthreads)
+{
+    const off_t ia32_aperf = 0xE8;
+    static struct clocks_data d;
+  
+    d.aperf = (uint64_t **) malloc(nthreads * sizeof(uint64_t *)); 
+    allocate_batch(USR_BATCH0, 1UL * nthreads);
+    load_thread_batch(ia32_aperf, d.aperf, USR_BATCH0);
+    if (cd != NULL)
+    {
+        *cd = &d;
+    }
+}
+
+int aperf_monitor(FILE *outfile)
+{
+    const off_t ia32_aperf = 0xE8;
+    static struct clocks_data *cd; 
+    static struct timespec t1;
+    struct timespec t2;
+    uint64_t elapsed;
+    int idx, i, j, k;
+    static int init = 0;
+    static int nsockets, ncores, nthreads;
+    const int BUFF_SIZE= 1024;
+    char file_buffer[BUFF_SIZE + 64]; 
+    static int buffercount;
+  
+    if(!init)
+    {
+        variorum_set_topology(&nsockets, &ncores, &nthreads);
+        init_aperf(&cd, nthreads);
+        buffercount = 0;
+        clock_gettime(CLOCK_MONOTONIC, &t1);
+        init = 1;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+    elapsed = BILLION * (t2.tv_sec - t1.tv_sec) + t2.tv_nsec - t1.tv_nsec; //nanoseconds
+
+    read_batch(USR_BATCH0);
+    for(i=0; i < nsockets; i++)
+    {
+        for(j=0; j<ncores/nsockets; j++)
+        {
+            for(k=0; k < nthreads/ncores; k++)
+            {
+                idx = (k*nsockets*(ncores/nsockets)) + (i*(ncores/nsockets)) + j;
+                buffercount=buffercount+sprintf(&file_buffer[buffercount], "%d, %lu, %d\n", j,*cd->aperf[idx], elapsed);
+            }
+        }
+        fwrite(file_buffer, buffercount, 1, outfile);
+        buffercount = 0;
+    }
+    fwrite(file_buffer, buffercount, 1, outfile);
+    buffercount = 0;
+
+    return 0;
+}
+
+void mon_storage(struct perf_data **pd, struct clocks_data **cd, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, struct fixed_counter **ctr0, struct fixed_counter **ctr1, struct fixed_counter **ctr2, off_t *msrs_fixed_ctrs, off_t *msr_perf_status)
+{
+    static int init = 0;
+    static struct clocks_data d;
+    static struct perf_data p;
+    static struct fixed_counter c0, c1, c2;
+    static int nthreads = 0;
+    static int nsockets = 0;
+
+    if (!init)
+    {
+        variorum_set_topology(&nsockets, NULL, &nthreads);
+        init_fixed_counter(&c0);
+        init_fixed_counter(&c1);
+        init_fixed_counter(&c2);
+        d.aperf = (uint64_t **) malloc(nthreads * sizeof(uint64_t *));
+        d.mperf = (uint64_t **) malloc(nthreads * sizeof(uint64_t *));
+        d.tsc = (uint64_t **) malloc(nthreads * sizeof(uint64_t *));
+        p.perf_status = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+        allocate_batch(USR_BATCH0, (6UL * nthreads)+(2UL*nsockets));
+        load_thread_batch(msr_aperf, d.aperf, USR_BATCH0);
+        load_thread_batch(msr_mperf, d.mperf, USR_BATCH0);
+        load_thread_batch(msr_tsc, d.tsc, USR_BATCH0);
+        load_socket_batch(msr_perf_status, p.perf_status, USR_BATCH0);
+        load_thread_batch(msrs_fixed_ctrs[0], c0.value, USR_BATCH0);
+        load_thread_batch(msrs_fixed_ctrs[1], c1.value, USR_BATCH0);
+        load_thread_batch(msrs_fixed_ctrs[2], c2.value, USR_BATCH0);
+        init = 1;
+    }
+
+    if (cd != NULL)
+    {
+        *cd = &d;
+    }
+
+    if (pd != NULL)
+    {
+        *pd = &p;
+    }
+
+    if (ctr0 != NULL)
+    {
+        *ctr0 = &c0;
+    }
+    if (ctr1 != NULL)
+    {
+        *ctr1 = &c1;
+    }
+    if (ctr2 != NULL)
+    {
+        *ctr2 = &c2;
+    }
+}
+
+void read_fixed_counter_data(FILE *writedest, off_t *msrs_fixed_ctrs, off_t msr_perf_global_ctrl, off_t msr_fixed_counter_ctrl, off_t msr_power_limit, off_t msr_rapl_unit, off_t msr_pkg_energy_status, off_t msr_dram_energy_status)
+{
+    struct fixed_counter *c0, *c1, *c2;
+    char hostname[1024];
+    int idx;
+    int i, j, k;
+    int nsockets, ncores, nthreads;
+    static int init = 0;
+    static struct rapl_data *rapl = NULL;
+    static struct timeval start;
+    struct timeval now;
+
+    variorum_set_topology(&nsockets, &ncores, &nthreads);
+
+    gethostname(hostname, 1024);
+    fixed_counter_storage(&c0, &c1, &c2, msrs_fixed_ctrs);
+
+    get_power(msr_rapl_unit, msr_pkg_energy_status, msr_dram_energy_status);
+
+    if (!init)
+    {
+        gettimeofday(&start, NULL);
+        rapl_storage(&rapl);
+    }
+    gettimeofday(&now, NULL);
+
+    read_batch(FIXED_COUNTERS_DATA);
+    for (i = 0; i < nsockets; i++)
+    {
+        for (j = 0; j < ncores/nsockets; j++)
+        {
+            for (k = 0; k < nthreads/ncores; k++)
+            {
+                idx = (k * nsockets * (ncores/nsockets)) + (i * (ncores/nsockets)) + j;
+                fprintf(writedest, "%s, %d, %d, %d, %lu, %lu, %lu, %lf, %lf \n", hostname, i, j, idx, *c0->value[idx], *c1->value[idx], *c2->value[idx],rapl->pkg_joules[i], rapl->pkg_watts[i]);
+            }
+        }
+    }
+}
+
+void get_monitoring_data(FILE *writedest, off_t *msrs_fixed_ctrs, off_t msr_perf_global_ctrl, off_t msr_fixed_counter_ctrl, off_t msr_power_limit, off_t msr_rapl_unit, off_t msr_pkg_energy_status, off_t msr_dram_energy_status, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, off_t msr_perf_status)
+{
+    int idx, i, j, k;
+    static int nsockets, ncores, nthreads;
+    static int init = 0;
+    char file_buffer[CHUNK_SIZE + 1024];
+    static int buffer_count = 0;
+
+    static struct timeval start;
+    struct timeval now;
+    int prev_aperf = 0;
+    int prev_mperf = 0;
+    int aperf_delta, mperf_delta;
+    static struct timespec t1;
+    struct timespec t2;
+    uint64_t elapsed;
+
+    struct fixed_counter *c0, *c1, *c2;
+    static struct rapl_data *rapl = NULL;
+    //struct pkg_therm_stat *pkg_stat = NULL;
+    //struct therm_stat *t_stat = NULL;
+
+    //get_power(msr_rapl_unit, msr_pkg_energy_status, msr_dram_energy_status);
+
+
+    //t_stat = (struct therm_stat *) malloc(nthreads * sizeof(struct therm_stat));
+    //get_therm_stat(t_stat, msr_therm_stat);
+
+    static struct clocks_data *cd;
+    static struct perf_data *pd;
+
+    if (!init)
+    {
+       variorum_set_topology(&nsockets, &ncores, &nthreads);
+       buffer_count = 0;
+       //gettimeofday(&start, NULL);
+       mon_storage(&pd, &cd, msr_aperf, msr_mperf, msr_tsc, &c0, &c1, &c2, msrs_fixed_ctrs, msr_perf_status);
+       enable_fixed_counters(msrs_fixed_ctrs, msr_perf_global_ctrl, msr_fixed_counter_ctrl);
+       rapl_storage(&rapl);
+       clock_gettime(CLOCK_MONOTONIC, &t1);
+       init = 1;
+    }
+    //pkg_stat = (struct pkg_therm_stat *) malloc(nsockets * sizeof(struct pkg_therm_stat));
+    //get_pkg_therm_stat(pkg_stat, msr_pkg_therm_stat);
+
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+    elapsed = BILLION * (t2.tv_sec - t1.tv_sec) + t2.tv_nsec - t1.tv_nsec; //nanoseconds
+    //get_power(msr_rapl_unit, msr_pkg_energy_status, msr_dram_energy_status);
+    //gettimeofday(&now, NULL);
+
+    read_batch(USR_BATCH0);
+    for (i = 0; i < nsockets; i++)
+    {
+        for (j = 0; j < ncores/nsockets; j++)
+        {
+            for (k = 0; k < nthreads/ncores; k++)
+            {
+                idx = (k * nsockets * (ncores/nsockets)) + (i * (ncores/nsockets)) + j;
+                aperf_delta = *cd->aperf[idx] - prev_aperf;
+                mperf_delta = *cd->mperf[idx] - prev_mperf;
+                if (idx != 0)
+                {
+                    prev_aperf = *cd->aperf[idx-1];
+                    prev_mperf = *cd->mperf[idx-1];
+                }
+                else
+                {
+                    prev_aperf = *cd->aperf[idx];
+                    prev_mperf = *cd->mperf[idx];
+                }
+
+                buffer_count = buffer_count + sprintf(&file_buffer[buffer_count], "%d,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu\n", i, j, idx, (long long unsigned int)(elapsed),*c0->value[idx], *c1->value[idx], *cd->aperf[idx], *cd->mperf[idx], aperf_delta, mperf_delta, MASK_VAL(*pd->perf_status[i], 15, 8));
+
+                //buffer_count= buffer_count + sprintf(&file_buffer[buffer_count], "%d,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lf,%lf,%d\n", i, j, idx, (long long unsigned int)(elapsed),*c0->value[idx], *c1->value[idx], *c2->value[idx], *cd->aperf[idx], *cd->mperf[idx], *cd->tsc[idx], MASK_VAL(*pd->perf_status[i], 15, 8), rapl->pkg_joules[i], rapl->pkg_watts[i], pkg_stat[i].readout);
+            }
+        }
+        fwrite(file_buffer, buffer_count, 1, writedest);
+        buffer_count = 0;
+    }
+    if (buffer_count > 0)
+    {
+        fwrite(file_buffer, buffer_count, 1, writedest);
+        buffer_count = 0;
+    }
+
+    //free(pkg_stat);
+    //free(t_stat);
 }
