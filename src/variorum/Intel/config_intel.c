@@ -6,8 +6,8 @@
 #include <variorum_error.h>
 #include <SandyBridge_2A.h>
 #include <IvyBridge_3E.h>
-#include <Broadwell_4F.h>
 #include <Haswell_3F.h>
+#include <Broadwell_4F.h>
 #include <KabyLake_9E.h>
 #include <Skylake_55.h>
 
@@ -48,6 +48,7 @@ int set_intel_func_ptrs(void)
         g_platform.dump_turbo = fm_06_2a_get_turbo_status;
         g_platform.enable_turbo = fm_06_2a_enable_turbo;
         g_platform.disable_turbo = fm_06_2a_disable_turbo;
+        g_platform.monitoring = fm_06_2a_monitoring;
     }
     // Ivy Bridge 06_3E
     else if (*g_platform.intel_arch == FM_06_3E)
@@ -62,6 +63,7 @@ int set_intel_func_ptrs(void)
         g_platform.dump_turbo = fm_06_3e_get_turbo_status;
         g_platform.enable_turbo = fm_06_3e_enable_turbo;
         g_platform.disable_turbo = fm_06_3e_disable_turbo;
+        g_platform.monitoring = fm_06_3e_monitoring;
     }
     // Haswell 06_3F
     else if (*g_platform.intel_arch == FM_06_3F)
@@ -76,6 +78,10 @@ int set_intel_func_ptrs(void)
         g_platform.dump_turbo = fm_06_3f_get_turbo_status;
         g_platform.enable_turbo = fm_06_3f_enable_turbo;
         g_platform.disable_turbo = fm_06_3f_disable_turbo;
+        g_platform.set_each_package_power_limit_tw = fm_06_3f_set_pkg_pwr_lim;
+        g_platform.monitoring = fm_06_3f_monitoring;
+        g_platform.dump_pstate = fm_06_3f_get_pstate;
+        g_platform.set_each_package_pstate = fm_06_3f_set_pstate;
     }
     // Broadwell 06_4F
     else if (*g_platform.intel_arch == FM_06_4F)
@@ -90,6 +96,8 @@ int set_intel_func_ptrs(void)
         g_platform.dump_turbo = fm_06_4f_get_turbo_status;
         g_platform.enable_turbo = fm_06_4f_enable_turbo;
         g_platform.disable_turbo = fm_06_4f_disable_turbo;
+        g_platform.monitoring = fm_06_4f_monitoring;
+        g_platform.aperf_monitoring=fm_06_4f_aperf_monitor;
     }
     // Skylake 06_55
     else if (*g_platform.intel_arch == FM_06_55)
@@ -118,6 +126,8 @@ int set_intel_func_ptrs(void)
         //g_platform.dump_turbo = fm_06_9e_get_turbo_status;
         //g_platform.enable_turbo = fm_06_9e_enable_turbo;
         //g_platform.disable_turbo = fm_06_9e_disable_turbo;
+        g_platform.monitoring = fm_06_9e_monitoring;
+        g_platform.dump_fixed_counters= fm_06_9e_dump_fixed_counter_data;
     }
     else
     {
