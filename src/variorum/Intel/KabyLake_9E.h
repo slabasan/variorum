@@ -86,4 +86,8 @@ int fm_06_9e_get_clocks(int long_ver);
 
 int fm_06_9e_get_power(int long_ver);
 
+int fm_06_9e_monitoring(void);
+
+int fm_06_9e_dump_fixed_counter_data(int long_ver);
+
 #endif

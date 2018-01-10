@@ -242,3 +242,18 @@ int fm_06_2a_get_turbo_status(void)
 
     return 0;
 }
+
+int fm_06_2a_monitoring(void)
+{
+    static int init = 0;
+
+    if (!init)
+    {
+        fprintf(stdout, "Host, Socket, Core, Thread, InstRet, UnhaltClkCycles, UnhaltRefCycles, APERF, MPERF, TSC, PERF_STAT, Joules, Watts, pkg_celsius, thrd_celsius \n");
+        init = 1;
+    }
+
+    //get_monitoring_data(stdout, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_therm_status, msrs.ia32_package_therm_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status);
+
+   return 0;
+}

@@ -1,11 +1,15 @@
+#include <signal.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <Broadwell_4F.h>
 #include <clocks_features.h>
 #include <config_architecture.h>
 #include <counters_features.h>
+#include <misc_features.h>
 #include <power_features.h>
 #include <thermal_features.h>
+#include <variorum_timers.h>
 
 static struct broadwell_4f_offsets msrs =
 {
@@ -61,6 +65,13 @@ static struct broadwell_4f_offsets msrs =
     .msrs_pcu_pmon_evtsel[2]      = 0xC32,
     .msrs_pcu_pmon_evtsel[3]      = 0xC33
 };
+
+int alarmed = 0;
+
+void sigh(int signum)
+{
+    alarmed = 1;
+}
 
 int fm_06_4f_get_power_limits(int long_ver)
 {
@@ -254,5 +265,52 @@ int fm_06_4f_get_turbo_status(void)
 
     unsigned int turbo_mode_disable_bit = 38;
     dump_turbo_status(stdout, msrs.ia32_misc_enable, turbo_mode_disable_bit);
+    return 0;
+}
+
+int fm_06_4f_aperf_monitor(FILE *fd, int sampleLength)
+{
+    signal(SIGALRM, &sigh);
+    alarm(sampleLength);
+    while (!alarmed)
+    {
+        aperf_monitor(fd);
+        //usleep(1000);
+    }
+    return 0;
+}
+
+//int fm_06_4f_set_2_power_limits(int package_power_limit1, int package_power_limit2)
+//{
+//    int socket;
+//    int nsockets, ncores, nthreads;
+//    variorum_set_topology(&nsockets, &ncores, &nthreads);
+//
+//    printf("Running %s\n", __FUNCTION__);
+//
+//    for (socket = 0; socket < nsockets; socket++)
+//    {
+//        set_package_2_power_limit(socket, package_power_limit1, package_power_limit2, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit);
+//    }
+//    return 0;
+//}
+
+int fm_06_4f_monitoring(FILE *outfile, int sampleLength, int interval, int doSleep)
+{
+    static int init = 0;
+
+    if (!init)
+    {
+        fprintf(outfile, "Host, Socket, Core, Thread, Time_ns, InstRet, UnhaltClkCycles, UnhaltRefCycles, APERF, MPERF, TSC, PERF_STAT, Joules, Watts, pkg_celsius\n");
+        init = 1;
+    }
+
+    signal(SIGALRM, &sigh);
+    alarm(sampleLength);
+    while (!alarmed)
+    {
+        get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status);
+        usleep(interval);
+    }
     return 0;
 }
