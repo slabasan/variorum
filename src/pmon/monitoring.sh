@@ -1,7 +1,7 @@
 #!/bin/bash
 
-VARIORUM_DIR=$HOME/cz_stash/libvariorum/install-connors6
-PMON_DIR=$HOME/cz_stash/libvariorum/build-connors6/pmon
+VARIORUM_DIR=$HOME/libvariorum/install
+PMON_DIR=$HOME/libvariorum/build/pmon
 
 if [ "$#" -ne 1 ]; then
     echo "Error: must provide interval for sampling in microseconds"
@@ -12,7 +12,7 @@ MS=$1
 ## MS units is microseconds. This is the interval for sampling.
 
 for i in {0..1}; do
-    taskset -c 15,31 env LD_LIBRARY_PATH=${VARIORUM_DIR}/lib:${LD_LIBRARY_PATH} ${PMON_DIR}/pmon -i $MS -t 12 -r $i -b $i &
+    taskset -c 15,31 env LD_LIBRARY_PATH=${VARIORUM_DIR}/lib:${LD_LIBRARY_PATH} ${PMON_DIR}/pmon -i $MS -t 12 -r $i -p 15 &
     pid=$(echo $!)
     sleep 1s
 

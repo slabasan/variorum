@@ -92,15 +92,20 @@ int fm_06_4f_disable_turbo(void);
 
 int fm_06_4f_get_turbo_status(void);
 
-int fm_06_4f_monitoring(FILE *outfile,
-                        int seconds,
-                        int interval,
-                        int doSleep);
-
 int fm_06_4f_aperf_monitor(FILE *fd,
                            int sampleLength);
 
 int fm_06_4f_set_2_power_limits(int package_power_limit1,
                                 int package_power_limit2);
 
+int fm_06_4f_set_pkg_pwr_lim(int package_power_limit1, double time_window);
+
+int fm_06_4f_monitoring(FILE *outfile,
+                        int seconds,
+                        int interval,
+                        int doSleep);
+ 
+int fm_06_4f_get_pstate(void);
+ 
+int fm_06_4f_set_pstate(int pstate);
 #endif

@@ -282,7 +282,7 @@ int fm_06_3f_monitoring(FILE *outfile, int sampleLength, int interval, int conti
 
     if (!init)
     {
-        fprintf(outfile, "Socket, Core, Thread, Time, InstRet, UnhaltClkCycles, APERF, MPERF, APER_DELTA, MPERF_DELTA, PERF_STAT\n");
+        fprintf(outfile, "Socket, Core, Thread, Time, InstRet, UnhaltClkCycles, APERF_DELTA, MPERF_DELTA, PERF_STAT\n");
         init = 1;
     }
 

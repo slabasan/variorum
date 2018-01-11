@@ -20,7 +20,8 @@ int main(int argc, char **argv)
     double timewindow = 0;
     int continuous = 0;
     int tflag = 0, iflag = 0;
-    int turbo = 0;
+    int turbo = -1;
+    int powLim = 120;
 
     static struct option long_options[] = {
         {"help",	   no_argument,       0, 'h'},
@@ -51,7 +52,8 @@ int main(int argc, char **argv)
 		           "-t | --time \t\t Required. The length of time to do sampling, in seconds\n"
 		           "-r | --runNum \t\t Optional. The iteration number of experimental runs\n"
                    "-p | --pstate \t\t Optional. Request a new p-state\n"
-                   "-w | --timeWindow \t Optional. Change RAPL time window\n"
+                   "-w | --timeWindow \t Optional. Change RAPL time window (sets powLim to 120 unless -l is passed)\n"
+                   "-l | --powLim \t Optional. Change RAPL power limit \n"
                    "-b | --turbo \t\t Optional. Use this flag if turbo boost should be enabled \n\n");
            exit(0);
            break;
@@ -61,6 +63,9 @@ int main(int argc, char **argv)
         case 'w':
             timewindow=(double)strtol(optarg, NULL, 10);
             break;
+         case 'l':
+             powLim=(int)strtol(optarg, NULL, 10);
+             break;
         case 'i':
             interval = (int)strtol(optarg, NULL, 10);
             if (interval == 0)
@@ -82,7 +87,7 @@ int main(int argc, char **argv)
 	        run = (int)strtol(optarg, NULL, 10);
             break;
         case 'b':
-            turbo = 1;
+            turbo = (int)strtol(optarg, NULL, 10);
             break;
         case ':': //mising arg
 	        exit(0);
@@ -113,14 +118,14 @@ int main(int argc, char **argv)
         exit(1);
     }
  
-    if (!turbo)
+    if (turbo == 0)
     {
         disable_turbo(); 
     }
-    else
+    if (turbo == 1)
     {
         enable_turbo();
-    }
+    } 
 
     if (pstate != 0)
     {
@@ -133,10 +138,11 @@ int main(int argc, char **argv)
     if (timewindow != 0)
     {
         /* Call powerlimit change.... */
-        //dump_power_limits();
-        set_each_socket_power_limit_tw(130, timewindow);
+        dump_power_limits();
+        set_each_socket_power_limit_tw(powLim, timewindow);
         dump_power_limits();
     }
+    
     monitoring(fd, sampleLength, interval, continuous);  
 
     fclose(fd);

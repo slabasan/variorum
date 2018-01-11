@@ -919,8 +919,9 @@ void mon_storage(struct perf_data **pd, struct clocks_data **cd, off_t msr_aperf
         d.aperf = (uint64_t **) malloc(nthreads * sizeof(uint64_t *));
         d.mperf = (uint64_t **) malloc(nthreads * sizeof(uint64_t *));
         d.tsc = (uint64_t **) malloc(nthreads * sizeof(uint64_t *));
+fprintf(stdout, "nthreads: %d\n", nthreads);
         p.perf_status = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
-        allocate_batch(USR_BATCH0, (6UL * nthreads)+(2UL*nsockets));
+        allocate_batch(USR_BATCH0, (7UL * nthreads)+(2UL*nsockets));
         load_thread_batch(msr_aperf, d.aperf, USR_BATCH0);
         load_thread_batch(msr_mperf, d.mperf, USR_BATCH0);
         load_thread_batch(msr_tsc, d.tsc, USR_BATCH0);
@@ -1007,7 +1008,9 @@ void get_monitoring_data(FILE *writedest, off_t *msrs_fixed_ctrs, off_t msr_perf
     struct timeval now;
     int prev_aperf = 0;
     int prev_mperf = 0;
-    int aperf_delta, mperf_delta;
+    int prev_c0 = 0;
+    int prev_c1 = 0;
+    int aperf_delta, mperf_delta, c0_delta, c1_delta;
     static struct timespec t1;
     struct timespec t2;
     uint64_t elapsed;
@@ -1055,18 +1058,24 @@ void get_monitoring_data(FILE *writedest, off_t *msrs_fixed_ctrs, off_t msr_perf
                 idx = (k * nsockets * (ncores/nsockets)) + (i * (ncores/nsockets)) + j;
                 aperf_delta = *cd->aperf[idx] - prev_aperf;
                 mperf_delta = *cd->mperf[idx] - prev_mperf;
+                c0_delta = *c0->value[idx] - prev_c0;
+                c1_delta = *c1->value[idx] - prev_c1;
                 if (idx != 0)
                 {
                     prev_aperf = *cd->aperf[idx-1];
                     prev_mperf = *cd->mperf[idx-1];
+                    prev_c0 = *c0->value[idx-1];
+                    prev_c1 = *c1->value[idx-1];
                 }
                 else
                 {
                     prev_aperf = *cd->aperf[idx];
                     prev_mperf = *cd->mperf[idx];
+                    prev_c0 = *c0->value[idx];
+                    prev_c1 = *c1->value[idx];
                 }
 
-                buffer_count = buffer_count + sprintf(&file_buffer[buffer_count], "%d,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu\n", i, j, idx, (long long unsigned int)(elapsed),*c0->value[idx], *c1->value[idx], *cd->aperf[idx], *cd->mperf[idx], aperf_delta, mperf_delta, MASK_VAL(*pd->perf_status[i], 15, 8));
+                buffer_count = buffer_count + sprintf(&file_buffer[buffer_count], "%d,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu\n", i, j, idx, (long long unsigned int)(elapsed),*c0->value[idx], *c1->value[idx], aperf_delta, mperf_delta, MASK_VAL(*pd->perf_status[i], 15, 8));
 
                 //buffer_count= buffer_count + sprintf(&file_buffer[buffer_count], "%d,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lf,%lf,%d\n", i, j, idx, (long long unsigned int)(elapsed),*c0->value[idx], *c1->value[idx], *c2->value[idx], *cd->aperf[idx], *cd->mperf[idx], *cd->tsc[idx], MASK_VAL(*pd->perf_status[i], 15, 8), rapl->pkg_joules[i], rapl->pkg_watts[i], pkg_stat[i].readout);
             }

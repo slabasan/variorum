@@ -96,7 +96,10 @@ int set_intel_func_ptrs(void)
         g_platform.dump_turbo = fm_06_4f_get_turbo_status;
         g_platform.enable_turbo = fm_06_4f_enable_turbo;
         g_platform.disable_turbo = fm_06_4f_disable_turbo;
+        g_platform.set_each_socket_power_limit_tw = fm_06_4f_set_pkg_pwr_lim;
         g_platform.monitoring = fm_06_4f_monitoring;
+        g_platform.dump_pstate = fm_06_4f_get_pstate;
+        g_platform.set_each_socket_pstate = fm_06_4f_set_pstate;
         g_platform.aperf_monitoring=fm_06_4f_aperf_monitor;
     }
     // Skylake 06_55
