@@ -165,7 +165,7 @@ void set_fixed_counter_ctrl(struct fixed_counter *ctr0, struct fixed_counter *ct
         *fixed_ctr_ctrl[i] = (*fixed_ctr_ctrl[i] & (~(1ULL<<11))) | (ctr2->pmi[i] << 11);
     }
     write_batch(FIXED_COUNTERS_CTRL_DATA);
-    write_batch(FIXED_COUNTERS_DATA);
+    //write_batch(FIXED_COUNTERS_DATA);
 }
 
 void fixed_counter_ctrl_storage(uint64_t ***perf_ctrl, uint64_t ***fixed_ctrl, off_t msr_perf_global_ctrl, off_t msr_fixed_counter_ctrl)
@@ -919,9 +919,8 @@ void mon_storage(struct perf_data **pd, struct clocks_data **cd, off_t msr_aperf
         d.aperf = (uint64_t **) malloc(nthreads * sizeof(uint64_t *));
         d.mperf = (uint64_t **) malloc(nthreads * sizeof(uint64_t *));
         d.tsc = (uint64_t **) malloc(nthreads * sizeof(uint64_t *));
-fprintf(stdout, "nthreads: %d\n", nthreads);
         p.perf_status = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
-        allocate_batch(USR_BATCH0, (7UL * nthreads)+(2UL*nsockets));
+        allocate_batch(USR_BATCH0, 7UL * nthreads);
         load_thread_batch(msr_aperf, d.aperf, USR_BATCH0);
         load_thread_batch(msr_mperf, d.mperf, USR_BATCH0);
         load_thread_batch(msr_tsc, d.tsc, USR_BATCH0);
