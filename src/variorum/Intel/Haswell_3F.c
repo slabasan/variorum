@@ -279,21 +279,19 @@ int fm_06_3f_set_pkg_pwr_lim(int package_power_limit, double time_window)
 int fm_06_3f_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
 {
     static int init = 0;
-
     if (!init)
     {
-        fprintf(outfile, "Socket, Core, Thread, Time, InstRet, UnhaltClkCycles, APERF_DELTA, MPERF_DELTA, PERF_STAT\n");
+        fprintf(outfile, "Socket, Core, Thread, Time, InstRet, UnhaltClkCycles, APER_DELTA, MPERF_DELTA, PERF_STAT\n");
         init = 1;
     }
-
     signal(SIGALRM, &fm_06_3f_sigh);
     alarm(sampleLength);
-    if (continuous == 0)
+    if (continuous == 0 )
     {
         while (!isAlarmed)
         {
-            get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status);
-            usleep(interval);
+	    usleep(interval);
+	    get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status);
         }
     }
     else
@@ -319,7 +317,7 @@ int fm_06_3f_set_pstate(int pstate)
     int ncore, nsockets;
 
     variorum_set_topology(&nsockets, &ncore, NULL);
-    printf("ncores: %d\n", ncore);
+
     for (socket =0; socket < nsockets; socket++)
     {
         for (core = 0; core < ncore; core++)
@@ -328,4 +326,11 @@ int fm_06_3f_set_pstate(int pstate)
         }
     }
     return 0;
+}
+
+int fm_06_3f_set_turbo_ratio(int turbo_ratio_limit){
+
+
+return 0;
+	
 }

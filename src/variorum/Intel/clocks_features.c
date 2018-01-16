@@ -237,17 +237,7 @@ void set_p_state(unsigned socket, unsigned core, int pstate, off_t msr_perf_ctl)
     static struct perf_data *cd;
 
     uint64_t write_val = pstate << 8;
-    //if (!procs)
-    //{
-    //    printf("\nno procs\n");
-    //    variorum_set_topology(&procs, NULL, NULL);
-    //    perf_storage_ctl(&cd, msr_perf_ctl);
-    //}
-    //printf("socket: %d, pstate: %d %x\n", socket, pstate, shiftedpstate);
-    //*cd->perf_ctl[socket] = pstate;
-
     write_msr_by_coord(socket, core, 0, msr_perf_ctl, write_val);
-    //write_batch(USR_BATCH1);
 }
 
 #if 0

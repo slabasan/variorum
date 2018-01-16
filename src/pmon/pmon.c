@@ -21,7 +21,6 @@ int main(int argc, char **argv)
     int continuous = 0;
     int tflag = 0, iflag = 0;
     int turbo = -1;
-    int powLim = 120;
 
     static struct option long_options[] = {
         {"help",	   no_argument,       0, 'h'},
@@ -30,17 +29,12 @@ int main(int argc, char **argv)
         {"runNum",     required_argument, 0, 'r'},
         {"pstate",	   required_argument, 0, 'p'},
         {"timeWindow", required_argument, 0, 'w'},
-        {"turbo",	   no_argument,  	  0, 'b'},
+        {"turbo",	   required_argument,  	  0, 'b'},
         {0,            0,                 0,  0 }
     };
 
     while ((c = getopt_long(argc, argv, "hi:t:r:p:w:b:", long_options, NULL)) != -1)
     {
-        //if (c == -1)
-        //{
-        //    break;
-        //}
-        
         switch(c)
         {
         case 'h':
@@ -52,9 +46,8 @@ int main(int argc, char **argv)
 		           "-t | --time \t\t Required. The length of time to do sampling, in seconds\n"
 		           "-r | --runNum \t\t Optional. The iteration number of experimental runs\n"
                    "-p | --pstate \t\t Optional. Request a new p-state\n"
-                   "-w | --timeWindow \t Optional. Change RAPL time window (sets powLim to 120 unless -l is passed)\n"
-                   "-l | --powLim \t Optional. Change RAPL power limit \n"
-                   "-b | --turbo \t\t Optional. Use this flag if turbo boost should be enabled \n\n");
+                   "-w | --timeWindow \t Optional. Change RAPL time window\n"
+                   "-b | --turbo \t\t Optional. 0 to disable and 1 to enable \n\n");
            exit(0);
            break;
         case 'p':
@@ -63,9 +56,6 @@ int main(int argc, char **argv)
         case 'w':
             timewindow=(double)strtol(optarg, NULL, 10);
             break;
-         case 'l':
-             powLim=(int)strtol(optarg, NULL, 10);
-             break;
         case 'i':
             interval = (int)strtol(optarg, NULL, 10);
             if (interval == 0)
@@ -122,27 +112,20 @@ int main(int argc, char **argv)
     {
         disable_turbo(); 
     }
-    if (turbo == 1)
+    if(turbo == 1)
     {
         enable_turbo();
     } 
 
     if (pstate != 0)
     {
-        disable_turbo();
-        dump_pstate();
-        /* This will set for either core or package level, depending on architecture. */
-        set_each_socket_pstate(pstate);
-        dump_pstate();
+        set_each_pstate(pstate);
     }
     if (timewindow != 0)
     {
-        /* Call powerlimit change.... */
-        dump_power_limits();
-        set_each_socket_power_limit_tw(powLim, timewindow);
+        set_each_socket_power_limit_tw(130, timewindow);
         dump_power_limits();
     }
-    
     monitoring(fd, sampleLength, interval, continuous);  
 
     fclose(fd);
