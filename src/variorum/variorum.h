@@ -154,9 +154,6 @@ int monitoring(FILE *outfile,
                int interval,
                int continuous);
 
-int aperf_monitoring(FILE *outfile,
-                     int sampleTime);
-
 int set_each_socket_pstate(int pstate);
 
 int dump_pstate(void);

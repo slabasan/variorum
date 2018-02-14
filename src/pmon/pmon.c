@@ -21,6 +21,7 @@ int main(int argc, char **argv)
     int continuous = 0;
     int tflag = 0, iflag = 0;
     int turbo = -1;
+    int powerLim = 0;
 
     static struct option long_options[] = {
         {"help",	   no_argument,       0, 'h'},
@@ -30,10 +31,11 @@ int main(int argc, char **argv)
         {"pstate",	   required_argument, 0, 'p'},
         {"timeWindow", required_argument, 0, 'w'},
         {"turbo",	   required_argument,  	  0, 'b'},
+        {"powerLim",	   required_argument,  	  0, 'l'},
         {0,            0,                 0,  0 }
     };
 
-    while ((c = getopt_long(argc, argv, "hi:t:r:p:w:b:", long_options, NULL)) != -1)
+    while ((c = getopt_long(argc, argv, "hi:t:r:p:w:b:l:", long_options, NULL)) != -1)
     {
         switch(c)
         {
@@ -41,12 +43,13 @@ int main(int argc, char **argv)
             printf("\nUsage: monitor [args]\n"
 		           "\nArgs/Options:\n\n"
                    "-h | --help \t\t display this message\n"
-		           "-i | --interval \t Required. How often to sample, in microseconds\n"
-		           "				   Pass 0 to sample continuously\n"
-		           "-t | --time \t\t Required. The length of time to do sampling, in seconds\n"
-		           "-r | --runNum \t\t Optional. The iteration number of experimental runs\n"
+		   "-i | --interval \t Required. How often to sample, in microseconds\n"
+		   "				   Pass 0 to sample continuously\n"
+		   "-t | --time \t\t Required. The length of time to do sampling, in seconds\n"
+		   "-r | --runNum \t\t Optional. The iteration number of experimental runs\n"
                    "-p | --pstate \t\t Optional. Request a new p-state\n"
                    "-w | --timeWindow \t Optional. Change RAPL time window\n"
+                   "-l | --powLim \t Optional. Change RAPL power limit\n"
                    "-b | --turbo \t\t Optional. 0 to disable and 1 to enable \n\n");
            exit(0);
            break;
@@ -55,6 +58,9 @@ int main(int argc, char **argv)
             break;
         case 'w':
             timewindow=(double)strtol(optarg, NULL, 10);
+            break;
+        case 'l':
+            powerLim = (int)strtol(optarg, NULL,10);
             break;
         case 'i':
             interval = (int)strtol(optarg, NULL, 10);
@@ -119,11 +125,22 @@ int main(int argc, char **argv)
 
     if (pstate != 0)
     {
-        set_each_pstate(pstate);
+       set_each_socket_pstate(pstate);
     }
+    if (powerLim != 0 && timewindow == 0)
+    {
+        dump_power_limits();
+        set_each_socket_power_limit(powerLim);
+        dump_power_limits();
+    }
+ 
     if (timewindow != 0)
     {
-        set_each_socket_power_limit_tw(130, timewindow);
+        dump_power_limits();
+        if (powerLim != 0)
+            set_each_socket_power_limit_tw(powerLim, timewindow);
+        else
+           set_each_socket_power_limit_tw(135, timewindow);
         dump_power_limits();
     }
     monitoring(fd, sampleLength, interval, continuous);  

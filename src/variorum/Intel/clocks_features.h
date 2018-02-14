@@ -134,6 +134,7 @@ void dump_p_state(FILE *writedest,
 
 void set_p_state(unsigned socket,
                  unsigned core,
+                 unsigned thread,
                  int pstate, 
                  off_t msr_perf_ctl);
 

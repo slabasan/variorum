@@ -100,7 +100,6 @@ int set_intel_func_ptrs(void)
         g_platform.monitoring = fm_06_4f_monitoring;
         g_platform.dump_pstate = fm_06_4f_get_pstate;
         g_platform.set_each_socket_pstate = fm_06_4f_set_pstate;
-        g_platform.aperf_monitoring=fm_06_4f_aperf_monitor;
     }
     // Skylake 06_55
     else if (*g_platform.intel_arch == FM_06_55)

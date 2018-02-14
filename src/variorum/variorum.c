@@ -410,27 +410,6 @@ int disable_turbo(void)
 	return err;
 }
 
-int aperf_monitoring(FILE *outfile, int sampleTime)
-{
-    int err = 0;
-    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-    if (err)
-    {
-        return -1;
-    }
-    err = g_platform.aperf_monitoring(outfile, sampleTime);
-    if (err)
-    {
-        return -1;
-    }
-    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-    if (err)
-    {
-        return -1;
-    }
-    return err;
-}
-
 int monitoring(FILE *outfile, int sampleTime, int interval, int continuous)
 {
     int err = 0;

@@ -281,7 +281,7 @@ int fm_06_3f_monitoring(FILE *outfile, int sampleLength, int interval, int conti
     static int init = 0;
     if (!init)
     {
-        fprintf(outfile, "Socket, Core, Thread, Time, InstRet, UnhaltClkCycles, APER_DELTA, MPERF_DELTA, PERF_STAT\n");
+       // fprintf(outfile, "Socket, Core, Thread, Time, InstRet, UnhaltClkCycles, APERF_DELTA, MPERF_DELTA, PERF_STAT, Watts\n");
         init = 1;
     }
     signal(SIGALRM, &fm_06_3f_sigh);
@@ -315,14 +315,18 @@ int fm_06_3f_set_pstate(int pstate)
 {
     int core, socket;
     int ncore, nsockets;
+    int thread, nthreads;
 
-    variorum_set_topology(&nsockets, &ncore, NULL);
+    variorum_set_topology(&nsockets, &ncore, &nthreads);
 
     for (socket =0; socket < nsockets; socket++)
     {
         for (core = 0; core < ncore; core++)
         {
-            set_p_state(socket, core, pstate, msrs.ia32_perf_ctl);
+           for (thread=0; thread < nthreads; thread++)
+           {
+              set_p_state(socket, core, thread, pstate, msrs.ia32_perf_ctl);
+           }
         }
     }
     return 0;

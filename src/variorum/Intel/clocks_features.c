@@ -231,13 +231,10 @@ void read_clocks_data(FILE *writedest, off_t msr_aperf, off_t msr_mperf, off_t m
     }
 }
 
-void set_p_state(unsigned socket, unsigned core, int pstate, off_t msr_perf_ctl)
+void set_p_state(unsigned socket, unsigned core, unsigned thread, int pstate, off_t msr_perf_ctl)
 {
-    static int procs = 0;
-    static struct perf_data *cd;
-
     uint64_t write_val = pstate << 8;
-    write_msr_by_coord(socket, core, 0, msr_perf_ctl, write_val);
+    write_msr_by_coord(socket, core, thread, msr_perf_ctl, write_val);
 }
 
 #if 0

@@ -856,51 +856,6 @@ void init_aperf(struct clocks_data **cd, int nthreads)
     }
 }
 
-int aperf_monitor(FILE *outfile)
-{
-    const off_t ia32_aperf = 0xE8;
-    static struct clocks_data *cd; 
-    static struct timespec t1;
-    struct timespec t2;
-    uint64_t elapsed;
-    int idx, i, j, k;
-    static int init = 0;
-    static int nsockets, ncores, nthreads;
-    const int BUFF_SIZE= 1024;
-    char file_buffer[BUFF_SIZE + 64]; 
-    static int buffercount;
-  
-    if(!init)
-    {
-        variorum_set_topology(&nsockets, &ncores, &nthreads);
-        init_aperf(&cd, nthreads);
-        buffercount = 0;
-        clock_gettime(CLOCK_MONOTONIC, &t1);
-        init = 1;
-    }
-    clock_gettime(CLOCK_MONOTONIC, &t2);
-    elapsed = BILLION * (t2.tv_sec - t1.tv_sec) + t2.tv_nsec - t1.tv_nsec; //nanoseconds
-
-    read_batch(USR_BATCH0);
-    for(i=0; i < nsockets; i++)
-    {
-        for(j=0; j<ncores/nsockets; j++)
-        {
-            for(k=0; k < nthreads/ncores; k++)
-            {
-                idx = (k*nsockets*(ncores/nsockets)) + (i*(ncores/nsockets)) + j;
-                buffercount=buffercount+sprintf(&file_buffer[buffercount], "%d, %lu, %d\n", j,*cd->aperf[idx], elapsed);
-            }
-        }
-        fwrite(file_buffer, buffercount, 1, outfile);
-        buffercount = 0;
-    }
-    fwrite(file_buffer, buffercount, 1, outfile);
-    buffercount = 0;
-
-    return 0;
-}
-
 void mon_storage(struct perf_data **pd, struct clocks_data **cd, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, struct fixed_counter **ctr0, struct fixed_counter **ctr1, struct fixed_counter **ctr2, off_t *msrs_fixed_ctrs, off_t msr_perf_status)
 {
     static int init = 0;
@@ -997,7 +952,7 @@ void read_fixed_counter_data(FILE *writedest, off_t *msrs_fixed_ctrs, off_t msr_
 
 void get_monitoring_data(FILE *writedest, off_t *msrs_fixed_ctrs, off_t msr_perf_global_ctrl, off_t msr_fixed_counter_ctrl, off_t msr_power_limit, off_t msr_rapl_unit, off_t msr_pkg_energy_status, off_t msr_dram_energy_status, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, off_t msr_perf_status)
 {
-int first_write =0;
+    int first_write =0;
     int idx, i, j, k;
     static int nsockets, ncores, nthreads;
     static int init = 0;
@@ -1008,7 +963,8 @@ int first_write =0;
     struct timeval now;
     static uint64_t *prev_aperf;
     static uint64_t *prev_mperf;
-    uint64_t aperf_delta, mperf_delta;
+    static uint64_t *prev_instRet;
+    uint64_t aperf_delta, mperf_delta, instRet_delta;
     static struct timespec t1;
     struct timespec t2;
     uint64_t elapsed;
@@ -1016,52 +972,57 @@ int first_write =0;
     struct fixed_counter *c0, *c1, *c2;
     static struct rapl_data *rapl = NULL;
     //struct pkg_therm_stat *pkg_stat = NULL;
-    //struct therm_stat *t_stat = NULL;
-
-    //get_power(msr_rapl_unit, msr_pkg_energy_status, msr_dram_energy_status);
-	
-
-    //t_stat = (struct therm_stat *) malloc(nthreads * sizeof(struct therm_stat));
-    //get_therm_stat(t_stat, msr_therm_stat);
 
     static struct clocks_data *cd;
     static struct perf_data *pd;
 
     if (!init)
     {
-       variorum_set_topology(&nsockets, &ncores, &nthreads);
-       buffer_count = 0;
-       //gettimeofday(&start, NULL);
-       mon_storage(&pd, &cd, msr_aperf, msr_mperf, msr_tsc, &c0, &c1, &c2, msrs_fixed_ctrs, msr_perf_status);
-       enable_fixed_counters(msrs_fixed_ctrs, msr_perf_global_ctrl, msr_fixed_counter_ctrl);
-       rapl_storage(&rapl);
+        variorum_set_topology(&nsockets, &ncores, &nthreads);
+        buffer_count = 0;
+        gettimeofday(&start, NULL);
+        mon_storage(&pd, &cd, msr_aperf, msr_mperf, msr_tsc, &c0, &c1, &c2, msrs_fixed_ctrs, msr_perf_status);
+        enable_fixed_counters(msrs_fixed_ctrs, msr_perf_global_ctrl, msr_fixed_counter_ctrl);
+        rapl_storage(&rapl);
 
-       prev_aperf=(uint64_t*) malloc(nthreads * sizeof(uint64_t));
-       if(prev_aperf == NULL){
-	fprintf(stderr, "Malloc 1 failed\n");
-	exit(EXIT_FAILURE);
-       }
+        prev_aperf=(uint64_t*) malloc(nthreads * sizeof(uint64_t));
+        if(prev_aperf == NULL)
+        {
+            fprintf(stderr, "Malloc 1 failed\n");
+            exit(EXIT_FAILURE);
+        }
 
-       prev_mperf=(uint64_t *) malloc(nthreads * sizeof(uint64_t));
-       if(prev_mperf == NULL){
-        fprintf(stderr, "Malloc 2 failed\n");
-        exit(EXIT_FAILURE);
-      } 
+        prev_mperf=(uint64_t *) malloc(nthreads * sizeof(uint64_t));
+        if(prev_mperf == NULL)
+        {
+            fprintf(stderr, "Malloc 2 failed\n");
+             exit(EXIT_FAILURE);
+        }
 
-       for (i=0; i < nthreads; i++){
+        prev_instRet=(uint64_t*) malloc(nthreads * sizeof(uint64_t));
+        if(prev_instRet == NULL)
+        {
+            fprintf(stderr, "Malloc 3 failed\n");
+            exit(EXIT_FAILURE);
+        }
+
+        for (i=0; i < nthreads; i++)
+        {
            prev_aperf[i]=0;
            prev_mperf[i]=0;
-       }
+           prev_instRet[i]=0;
+        }
 
        clock_gettime(CLOCK_MONOTONIC, &t1);
        init = 1;
        first_write = 1;
     }
+
     //pkg_stat = (struct pkg_therm_stat *) malloc(nsockets * sizeof(struct pkg_therm_stat));
     //get_pkg_therm_stat(pkg_stat, msr_pkg_therm_stat);
     clock_gettime(CLOCK_MONOTONIC, &t2);
     elapsed = BILLION * (t2.tv_sec - t1.tv_sec) + t2.tv_nsec - t1.tv_nsec; //nanoseconds
-    //get_power(msr_rapl_unit, msr_pkg_energy_status, msr_dram_energy_status);
+    get_power(msr_rapl_unit, msr_pkg_energy_status, msr_dram_energy_status);
     //gettimeofday(&now, NULL);
     read_batch(USR_BATCH0);
     for (i = 0; i < nsockets; i++)
@@ -1073,25 +1034,26 @@ int first_write =0;
                 idx = (k * nsockets * (ncores/nsockets)) + (i * (ncores/nsockets)) + j;
                 aperf_delta = *cd->aperf[idx] - prev_aperf[idx];
                 mperf_delta = *cd->mperf[idx] - prev_mperf[idx];
+                instRet_delta = *c0->value[idx] - prev_instRet[idx];
                 prev_aperf[idx] = *cd->aperf[idx];
                 prev_mperf[idx] = *cd->mperf[idx];
+                prev_instRet[idx] = *c0->value[idx];
                 
-                if( first_write != 1)
+                if( i == 1 && first_write != 1)
                 {
-                    buffer_count = buffer_count + sprintf(&file_buffer[buffer_count], "%d,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu\n", i, j, idx, (long long unsigned int)(elapsed),*c0->value[idx], *c1->value[idx], aperf_delta, mperf_delta, MASK_VAL(*pd->perf_status[i], 15, 8));
-                }       
-                //buffer_count= buffer_count + sprintf(&file_buffer[buffer_count], "%d,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lf,%lf,%d\n", i, j, idx, (long long unsigned int)(elapsed),*c0->value[idx], *c1->value[idx], *c2->value[idx], *cd->aperf[idx], *cd->mperf[idx], *cd->tsc[idx], MASK_VAL(*pd->perf_status[i], 15, 8), rapl->pkg_joules[i], rapl->pkg_watts[i], pkg_stat[i].readout);
+                    buffer_count = buffer_count + sprintf(&file_buffer[buffer_count], "%d,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu\n", i, j, idx, (long long unsigned int)(elapsed),*c0->value[idx], *c1->value[idx], aperf_delta, mperf_delta, instRet_delta);
+                }
             }
         }
         fwrite(file_buffer, buffer_count, 1, writedest);
         buffer_count = 0;
     }
+    
     if (buffer_count > 0)
     {
         fwrite(file_buffer, buffer_count, 1, writedest);
         buffer_count = 0;
     }
 
-    //free(pkg_stat);
-    //free(t_stat);
+//    free(pkg_stat);
 }

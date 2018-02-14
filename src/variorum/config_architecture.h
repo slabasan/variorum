@@ -145,9 +145,6 @@ struct platform
                       int interval,
                       int continuous);
 
-    int (*aperf_monitoring)(FILE *fd,
-                            int sampleTime);
-
     int (*set_each_socket_power_limit_tw)(int socket_power_limit,
                                            double time_window);
 
