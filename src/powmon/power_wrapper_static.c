@@ -34,6 +34,7 @@
 
 #define _GNU_SOURCE
 
+#include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -77,11 +78,94 @@ static int running = 1;
 
 int main(int argc, char **argv)
 {
-    if (argc < 3)
+    const char *usage = "\n"
+                        "NAME\n"
+                        "  power_wrapper_static - Package and DRAM power\n"
+                        "  monitor, adjusting the power cap stewise every\n"
+                        "  500 ms.\n"
+                        "SYNOPSIS\n"
+                        "  %s [--help | -h] [-c] -w -a \"<executable> <args> ...\"\n"
+                        "OVERVIEW\n"
+                        "  Power_wrapper_static is a utility for setting a\n"
+                        "  power cap, and sampling and printing the power\n"
+                        "  consumption (for package and DRAM) and power limit\n"
+                        "  per socket for systems with two sockets.\n"
+                        "OPTIONS\n"
+                        "  --help | -h\n"
+                        "      Display this help information, then exit.\n"
+                        "  -a\n"
+                        "      Application and arguments in quotes.\n"
+                        "  -w\n"
+                        "      Power cap.\n"
+                        "  -c\n"
+                        "      Remove stale shared memory.\n"
+                        "\n";
+    if (argc == 1 || (argc > 1 && (
+                          strncmp(argv[1], "--help", strlen("--help")) == 0 ||
+                          strncmp(argv[1], "-h", strlen("-h")) == 0 )))
     {
-        printf("Usage: %s <watt_cap> <executable> <args> ...\n", argv[0]);
+        printf(usage, argv[0]);
+        return 0;
+    }
+
+    int opt;
+    int app_flag = 0;
+    int watts_flag = 0;
+    char *app;
+    char **arg = NULL;
+
+    while ((opt = getopt(argc, argv, "cw:a:")) != -1)
+    {
+        switch(opt)
+        {
+            case 'c':
+                highlander_clean();
+                printf("Exiting power_wrapper_dynamic...\n");
+                return 0;
+            case 'a':
+                app_flag = 1;
+                app = optarg;
+                break;
+            case 'w':
+                watts_flag = 1;
+                watt_cap = atof(optarg);
+                break;
+            case '?':
+                fprintf(stderr, "\nError: unknown parameter \"-%c\"\n", optopt);
+                fprintf(stderr, usage, argv[0]);
+                return 1;
+            default:
+                return 1;
+        }
+    }
+    if (app_flag == 0)
+    {
+        fprintf(stderr, "\nError: must specify \"-a\"\n");
+        fprintf(stderr, usage, argv[0]);
         return 1;
     }
+    if (watts_flag == 0)
+    {
+        fprintf(stderr, "\nError: must specify \"-w\"\n");
+        fprintf(stderr, usage, argv[0]);
+        return 1;
+    }
+
+    char *app_split = strtok(app, " ");
+    int n_spaces = 0, i;
+    while (app_split)
+    {
+        arg = realloc (arg, sizeof (char*) * ++n_spaces);
+
+        if (arg == NULL)
+        {
+            return 1; /* memory allocation failed */
+        }
+        arg[n_spaces-1] = app_split;
+        app_split = strtok(NULL, " ");
+    }
+    arg = realloc (arg, sizeof (char*) * (n_spaces+1));
+    arg[n_spaces] = 0;
 
     if (highlander())
     {
@@ -97,10 +181,15 @@ int main(int argc, char **argv)
         logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            printf("Fatal Error: %s on %s cannot open the appropriate fd.\n", argv[0], hostname);
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
             return 1;
         }
         logfile = fdopen(logfd, "w");
+        if (logfile == NULL)
+        {
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            return 1;
+        }
 #endif
 
         //read_rapl_init();
@@ -139,10 +228,15 @@ int main(int argc, char **argv)
         logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            printf("Fatal Error: %s on %s cannot open the appropriate fd.\n", argv[0], hostname);
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
             return 1;
         }
         summaryfile = fdopen(logfd, "w");
+        if (summaryfile == NULL)
+        {
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            return 1;
+        }
         /* Output summary data. */
         char *msg;
         //asprintf(&msg, "host: %s\npid: %d\ntotal: %lf\nallocated: %lf\nmax_watts: %lf\nmin_watts: %lf\nruntime ms: %lu\n,start: %lu\nend: %lu\n", hostname, app_pid, total_joules, limit_joules, max_watts, min_watts, end-start, start, end);

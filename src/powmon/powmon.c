@@ -34,6 +34,7 @@
 
 #define _GNU_SOURCE
 
+#include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -76,12 +77,11 @@ static int running = 1;
 
 int main(int argc, char **argv)
 {
-#if 0
     const char *usage = "\n"
                         "NAME\n"
                         "  powmon - Package and DRAM power monitor\n"
                         "SYNOPSIS\n"
-                        "  %s [--help | -h] [-c] <executable> <args> ...\n"
+                        "  %s [--help | -h] [-c] -a \"<executable> <args> ...\"\n"
                         "OVERVIEW\n"
                         "  Powmon is a utility for sampling and printing the\n"
                         "  power consumption (for package and DRAM) and power\n"
@@ -89,6 +89,8 @@ int main(int argc, char **argv)
                         "OPTIONS\n"
                         "  --help | -h\n"
                         "      Display this help information, then exit.\n"
+                        "  -a\n"
+                        "      Application and arguments in quotes.\n"
                         "  -c\n"
                         "      Remove stale shared memory.\n"
                         "\n";
@@ -99,25 +101,59 @@ int main(int argc, char **argv)
         printf(usage, argv[0]);
         return 0;
     }
-    if (argc < 2)
-    {
-        printf(usage, argv[0]);
-        return 1;
-    }
 
     int opt;
-    while ((opt = getopt(argc, argv, "c")) != -1)
+    int app_flag = 0;
+    char *app;
+    char **arg = NULL;
+
+    while ((opt = getopt(argc, argv, "ca:")) != -1)
     {
         switch(opt)
         {
             case 'c':
                 highlander_clean();
+                printf("Exiting powmon...\n");
                 return 0;
-            default:
-                fprintf(stderr, "\nError: unknown parameter \"%c\"\n", opt);
+            case 'a':
+                app_flag = 1;
+                app = optarg;
+                break;
+            case '?':
+                fprintf(stderr, "\nError: unknown parameter \"-%c\"\n", optopt);
                 fprintf(stderr, usage, argv[0]);
-                return -1;
+                return 1;
+            default:
+                return 1;
         }
+    }
+    if (app_flag == 0)
+    {
+        fprintf(stderr, "\nError: must specify \"-a\"\n");
+        fprintf(stderr, usage, argv[0]);
+        return 1;
+    }
+
+    char *app_split = strtok(app, " ");
+    int n_spaces = 0, i;
+    while (app_split)
+    {
+        arg = realloc (arg, sizeof (char*) * ++n_spaces);
+
+        if (arg == NULL)
+        {
+            return 1; /* memory allocation failed */
+        }
+        arg[n_spaces-1] = app_split;
+        app_split = strtok(NULL, " ");
+    }
+    arg = realloc (arg, sizeof (char*) * (n_spaces+1));
+    arg[n_spaces] = 0;
+
+#ifdef VARIORUM_DEBUG
+    for (i = 0; i < (n_spaces+1); ++i)
+    {
+        printf ("arg[%d] = %s\n", i, arg[i]);
     }
 #endif
 
@@ -134,10 +170,15 @@ int main(int argc, char **argv)
         logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            printf("Fatal Error: %s on %s cannot open the appropriate fd.\n", argv[0], hostname);
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
             return 1;
         }
         logfile = fdopen(logfd, "w");
+        if (logfile == NULL)
+        {
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            return 1;
+        }
 
         /* Start power measurement thread. */
         pthread_attr_t mattr;
@@ -152,8 +193,8 @@ int main(int argc, char **argv)
         if (app_pid == 0)
         {
             /* I'm the child. */
-            printf("FOO %s\n", argv[1]);
-            execvp(argv[1], &argv[1]);
+            printf("FOO %s %s %s\n", arg[0], arg[1], arg[2]);
+            execvp(arg[0], &arg[0]);
             printf("fork failure\n");
             return 1;
         }
@@ -174,10 +215,16 @@ int main(int argc, char **argv)
         logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            printf("Fatal Error: %s on %s cannot open the appropriate fd.\n", argv[0], hostname);
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
             return 1;
         }
         summaryfile = fdopen(logfd, "w");
+        if (summaryfile == NULL)
+        {
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            return 1;
+        }
+
         char *msg;
         //asprintf(&msg, "host: %s\npid: %d\ntotal_joules: %lf\nallocated: %lf\nmax_watts: %lf\nmin_watts: %lf\nruntime ms: %lu\nstart: %lu\nend: %lu\n", hostname, app_pid, total_joules, limit_joules, max_watts, min_watts, end-start, start, end);
         asprintf(&msg, "host: %s\npid: %d\nruntime ms: %lu\nstart: %lu\nend: %lu\n", hostname, app_pid, end-start, start, end);
@@ -198,7 +245,7 @@ int main(int argc, char **argv)
         if (app_pid == 0)
         {
             /* I'm the child. */
-            execvp(argv[1], &argv[1]);
+            execvp(arg[0], &arg[0]);
             printf("BAR %s\n", argv[1]);
             printf("Fork failure\n");
             return 1;
@@ -209,5 +256,6 @@ int main(int argc, char **argv)
         highlander_wait();
     }
 
+    highlander_clean();
     return 0;
 }
