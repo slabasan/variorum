@@ -474,7 +474,7 @@ int dump_pstate(void)
 
 }
 
-int set_each_socket_pstate(int pstate)
+int set_each_pstate(int pstate)
 {
     int err = 0;
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);

@@ -177,24 +177,26 @@ void print_clocks_data(FILE *writedest, off_t msr_aperf, off_t msr_mperf, off_t 
 
 void dump_p_state(FILE *writedest, off_t msr_perf_status)
 {
-    static int procs = 0;
+    static int procs, ncores, nthreads = 0;
     static struct perf_data *cd;
-    int sock_idx;
+    int idx;
 
     if (!procs)
     {   
         variorum_set_topology(&procs, NULL, NULL);
         perf_storage(&cd, msr_perf_status);
     }   
+
     read_batch(PERF_DATA);
-    for (sock_idx = 0; sock_idx < procs; sock_idx++)
-    {   
-        unsigned long long perf_state = *cd->perf_status[sock_idx] & 0xFFFF;
+
+    for (idx = 0; idx < procs; idx++)
+    {
+        unsigned long long perf_state = *cd->perf_status[idx] & 0xFFFF;
         double pstate_actual = perf_state/256;
-        fprintf(writedest, "Socket %d:\n", sock_idx);
-        fprintf(writedest, "  bits            = %lx\n", *cd->perf_status[sock_idx]);
+        fprintf(writedest, "Socket: %d\n", idx);
+        fprintf(writedest, "  bits            = %lx\n", *cd->perf_status[idx]);
         fprintf(writedest, "  current p-state = %.0f MHz\n", pstate_actual*100);
-    }   
+    }
 }
 
 void read_clocks_data(FILE *writedest, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, off_t msr_perf_status)
@@ -269,60 +271,8 @@ void print_clocks_data_socket(FILE *writedest, off_t msr_aperf, off_t msr_mperf,
     }
 }
 
-void print_clocks_data_core(FILE *writedest, off_t msr_aperf, off_t msr_mperf, off_t msr_tsc, off_t msr_perf_status, off_t msr_platform_info)
-{
-    static struct clocks_data *cd;
-    static struct perf_data *pd;
-    int i, j, k;
-    int idx;
-    int nsockets, ncores, nthreads;
-    char hostname[1024];
-    int max_non_turbo_ratio = get_max_non_turbo_ratio(msr_platform_info);
-
-    variorum_set_topology(&nsockets, &ncores, &nthreads);
-    gethostname(hostname, 1024);
-
-    clocks_storage(&cd, msr_aperf, msr_mperf, msr_tsc);
-    perf_storage(&pd, msr_perf_status);
-    read_batch(CLOCKS_DATA);
-    read_batch(PERF_DATA);
-    for (i = 0; i < nsockets; i++)
-    {
-        for (j = 0; j < ncores/nsockets; j++)
-        {
-            for (k = 0; k < nthreads/ncores; k++)
-            {
-                idx = (k * nsockets * (ncores/nsockets)) + (i * (ncores/nsockets)) + j;
-                fprintf(writedest, "_CLOCKS_DATA Hostname: %s Socket: %d Core: %d Thread_Phy: %d Thread_Log: %d APERF: %lu MPERF: %lu TSC: %lu Curr_Freq_Mhz: %lu Avg_Freq_Mhz: %f\n",
-                        hostname, i, j, k, idx, *cd->aperf[idx], *cd->mperf[idx], *cd->tsc[idx], MASK_VAL(*pd->perf_status[i], 15, 8) * 100, max_non_turbo_ratio*((*cd->aperf[idx])/(double)(*cd->mperf[idx])));
-            }
-        }
-    }
-}
 #endif
 
-//void set_p_state(unsigned socket, uint64_t pstate)
-//{
-//    static uint64_t procs = 0;
-//    static struct perf_data *cd;
-//
-//    if (!procs)
-//    {
-//        procs = num_sockets();
-//        perf_storage(&cd);
-//    }
-//    *cd->perf_ctl[socket] = pstate;
-//#ifdef LIBMSR_DEBUG
-//    printf("PERF_CTL raw decimal %" PRIu64 "\n", *cd->perf_ctl[socket]);
-//#endif
-//    write_batch(PERF_CTL);
-//
-//#ifdef LIBMSR_DEBUG
-//    read_batch(PERF_CTL);
-//    printf("---reading PERF_CTL raw decimal %" PRIu64 "\n", *cd->perf_ctl[socket]);
-//#endif
-//}
-//
 //void dump_clock_mod(struct clock_mod *s, FILE *writedest)
 //{
 //    double percent = 0.0;

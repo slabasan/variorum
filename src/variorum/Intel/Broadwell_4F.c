@@ -268,12 +268,28 @@ int fm_06_4f_get_turbo_status(void)
     return 0;
 }
 
+
+//int fm_06_4f_set_2_power_limits(int package_power_limit1, int package_power_limit2)
+//{
+//    int socket;
+//    int nsockets, ncores, nthreads;
+//    variorum_set_topology(&nsockets, &ncores, &nthreads);
+//
+//    printf("Running %s\n", __FUNCTION__);
+//
+//    for (socket = 0; socket < nsockets; socket++)
+//    {
+//        set_package_2_power_limit(socket, package_power_limit1, package_power_limit2, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit);
+//    }
+//    return 0;
+//}
+
 int fm_06_4f_set_pkg_pwr_lim(int package_power_limit, double time_window)
 {
     int socket;
     int nsockets, ncores, nthreads;
     variorum_set_topology(&nsockets, &ncores, &nthreads);
- 
+
     for(socket = 0; socket < nsockets; socket++)
     {
         set_pkg_pwr_lim(socket, package_power_limit, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, time_window);
@@ -281,13 +297,12 @@ int fm_06_4f_set_pkg_pwr_lim(int package_power_limit, double time_window)
 
     return 0;
 }
- 
+
 int fm_06_4f_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
 {
     static int init = 0;
     if (!init)
     {
-     //   fprintf(outfile, "Socket, Core, Thread, Time, InstRet, UnhaltClkCycles, APERF_DELTA, MPERF_DELTA, PERF_STAT, Watts\n");
         init = 1;
     }
     signal(SIGALRM, &fm_06_4f_sigh);
@@ -297,14 +312,14 @@ int fm_06_4f_monitoring(FILE *outfile, int sampleLength, int interval, int conti
         while (!fm_06_4f_isAlarmed)
         {
             usleep(interval);
-            get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status);
+        get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status, msrs.ia32_perfevtsel_counters, msrs.ia32_perfmon_counters);
         }
     }
     else
     {
         while (!fm_06_4f_isAlarmed)
         {
-            get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status);
+            get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status, msrs.ia32_perfevtsel_counters, msrs.ia32_perfmon_counters);
         }
     }
     return 0;
@@ -314,6 +329,7 @@ int fm_06_4f_get_pstate(void)
 {
     dump_p_state(stdout, msrs.ia32_perf_status);
     return 0;
+
 }
 
 int fm_06_4f_set_pstate(int pstate)
@@ -335,4 +351,5 @@ int fm_06_4f_set_pstate(int pstate)
         }
     }
     return 0;
-} 
+}
+

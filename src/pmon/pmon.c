@@ -1,5 +1,4 @@
-// Program to monitor performance of a running application and make adjustments
-// to RAPL. Runs on a dedicated core
+// Program to monitor performance of a running application and make adjustments to RAPL. Runs on a dedicated core
 //
 // Author: Tiffany A. Connors 
 
@@ -125,7 +124,7 @@ int main(int argc, char **argv)
 
     if (pstate != 0)
     {
-       set_each_socket_pstate(pstate);
+        set_each_pstate(pstate);
     }
     if (powerLim != 0 && timewindow == 0)
     {
