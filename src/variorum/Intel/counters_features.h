@@ -379,7 +379,7 @@ void get_monitoring_data(FILE *writedest,
                          off_t msr_mperf, 
                          off_t msr_tsc, 
                          off_t msr_perf_status,
-			 off_t msr_perfevtsel_counters, 
-			 off_t msr_perfmon_counters);
+			             off_t *msr_perfevtsel_counters, 
+			             off_t *msr_perfmon_counters);
 
 #endif
