@@ -88,4 +88,22 @@ int fm_06_55_get_clocks(int long_ver);
 
 int fm_06_55_get_power(int long_ver);
 
+int fm_06_55_enable_turbo(void);
+
+int fm_06_55_disable_turbo(void);
+
+int fm_06_55_get_turbo_status(void);
+
+int fm_06_55_set_pkg_pwr_lim(int package_power_limit1, 
+                             double time_window);
+
+int fm_06_55_monitoring(FILE *outfile,
+                        int seconds,
+                        int interval,
+                        int doSleep);
+
+int fm_06_55_get_pstate(void);
+
+int fm_06_55_set_pstate(int pstate);
+
 #endif

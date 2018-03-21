@@ -1,9 +1,12 @@
+#include <signal.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <SandyBridge_2A.h>
 #include <clocks_features.h>
 #include <config_architecture.h>
 #include <counters_features.h>
+#include <misc_features.h>
 #include <power_features.h>
 #include <thermal_features.h>
 
@@ -50,6 +53,13 @@ static struct sandybridge_2a_offsets msrs =
     .ia32_perfevtsel_counters[6]  = 0x18C,
     .ia32_perfevtsel_counters[7]  = 0x18D,
 };
+
+int fm_06_2a_isAlarmed = 0;
+
+void fm_06_2a_sigh(int signum)
+{
+    fm_06_2a_isAlarmed = 1;
+}
 
 int fm_06_2a_get_power_limits(int long_ver)
 {
@@ -243,17 +253,73 @@ int fm_06_2a_get_turbo_status(void)
     return 0;
 }
 
+int fm_06_2a_set_pkg_pwr_lim(int package_power_limit, double time_window)
+{
+    int socket;
+    int nsockets, ncores, nthreads;
+    variorum_set_topology(&nsockets, &ncores, &nthreads);
+
+    for(socket = 0; socket < nsockets; socket++)
+    {
+        set_pkg_pwr_lim(socket, package_power_limit, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, time_window);
+    }
+
+    return 0;
+}
+
 int fm_06_2a_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
 {
     static int init = 0;
-
     if (!init)
     {
-        fprintf(stdout, "Host, Socket, Core, Thread, InstRet, UnhaltClkCycles, UnhaltRefCycles, APERF, MPERF, TSC, PERF_STAT, Joules, Watts, pkg_celsius, thrd_celsius \n");
         init = 1;
     }
-
-    //get_monitoring_data(stdout, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_therm_status, msrs.ia32_package_therm_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status);
-
-   return 0;
+    signal(SIGALRM, &fm_06_2a_sigh);
+    alarm(sampleLength);
+    if (continuous == 0 )
+    {
+        while (!fm_06_2a_isAlarmed)
+        {
+            usleep(interval);
+            get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status, msrs.ia32_perfevtsel_counters, msrs.ia32_perfmon_counters);
+        }
+    }
+    else
+    {
+        while (!fm_06_2a_isAlarmed)
+        {
+            get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status, msrs.ia32_perfevtsel_counters, msrs.ia32_perfmon_counters);
+        }
+    }
+    return 0;
 }
+
+int fm_06_2a_get_pstate(void)
+{
+    dump_p_state(stdout, msrs.ia32_perf_status);
+    return 0;
+
+}
+
+int fm_06_2a_set_pstate(int pstate)
+{
+    int core, socket;
+    int ncore, nsockets;
+    int thread, nthreads;
+
+    variorum_set_topology(&nsockets, &ncore, &nthreads);
+
+    for (socket =0; socket < nsockets; socket++)
+    {
+        for (core = 0; core < ncore; core++)
+        {
+           for (thread=0; thread < nthreads; thread++)
+           {
+              set_p_state(socket, core, thread, pstate, msrs.ia32_perf_ctl);
+           }
+        }
+    }
+    return 0;
+}
+
+

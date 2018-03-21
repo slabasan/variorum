@@ -1,9 +1,12 @@
+#include <signal.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <Skylake_55.h>
 #include <clocks_features.h>
 #include <config_architecture.h>
 #include <counters_features.h>
+#include <misc_features.h>
 #include <power_features.h>
 #include <thermal_features.h>
 
@@ -57,6 +60,13 @@ static struct skylake_55_offsets msrs =
     .ia32_perfevtsel_counters[6]  = 0x18C,
     .ia32_perfevtsel_counters[7]  = 0x18D,
 };
+
+int fm_06_55_isAlarmed = 0;
+
+void fm_06_55_sigh(int signum)
+{
+    fm_06_55_isAlarmed = 1;
+}
 
 int fm_06_55_get_power_limits(int long_ver)
 {
@@ -212,3 +222,103 @@ int fm_06_55_get_power(int long_ver)
     }
     return 0;
 }
+
+int fm_06_55_enable_turbo(void)
+{
+     printf("Running %s\n", __FUNCTION__);
+
+    unsigned int turbo_mode_disable_bit = 38;
+    set_turbo_on(msrs.ia32_misc_enable, turbo_mode_disable_bit);
+
+    return 0;
+}
+
+int fm_06_55_disable_turbo(void)
+{
+    printf("Running %s\n", __FUNCTION__);
+
+    unsigned int turbo_mode_disable_bit = 38;
+    set_turbo_off(msrs.ia32_misc_enable, turbo_mode_disable_bit);
+
+    return 0;
+}
+
+int fm_06_55_get_turbo_status(void)
+{
+    printf("Running %s\n", __FUNCTION__);
+
+    unsigned int turbo_mode_disable_bit = 38;
+    dump_turbo_status(stdout, msrs.ia32_misc_enable, turbo_mode_disable_bit);
+
+    return 0;
+}
+
+int fm_06_55_set_pkg_pwr_lim(int package_power_limit, double time_window)
+{
+    int socket;
+    int nsockets, ncores, nthreads;
+    variorum_set_topology(&nsockets, &ncores, &nthreads);
+
+    for(socket = 0; socket < nsockets; socket++)
+    {
+        set_pkg_pwr_lim(socket, package_power_limit, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, time_window);
+    }
+
+    return 0;
+}
+
+int fm_06_55_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
+{
+    static int init = 0;
+    if (!init)
+    {
+        init = 1;
+    }
+    signal(SIGALRM, &fm_06_55_sigh);
+    alarm(sampleLength);
+    if (continuous == 0 )
+    {
+        while (!fm_06_55_isAlarmed)
+        {
+            usleep(interval);
+            get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status, msrs.ia32_perfevtsel_counters, msrs.ia32_perfmon_counters);
+        }
+    }
+    else
+    {
+        while (!fm_06_55_isAlarmed)
+        {
+            get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status, msrs.ia32_perfevtsel_counters, msrs.ia32_perfmon_counters);
+        }
+    }
+    return 0;
+}
+
+int fm_06_55_get_pstate(void)
+{
+    dump_p_state(stdout, msrs.ia32_perf_status);
+    return 0;
+
+}
+
+int fm_06_55_set_pstate(int pstate)
+{
+    int core, socket;
+    int ncore, nsockets;
+    int thread, nthreads;
+
+    variorum_set_topology(&nsockets, &ncore, &nthreads);
+
+    for (socket =0; socket < nsockets; socket++)
+    {
+        for (core = 0; core < ncore; core++)
+        {
+           for (thread=0; thread < nthreads; thread++)
+           {
+              set_p_state(socket, core, thread, pstate, msrs.ia32_perf_ctl);
+           }
+        }
+    }
+    return 0;
+}
+

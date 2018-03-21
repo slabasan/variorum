@@ -92,9 +92,16 @@ int fm_06_3e_disable_turbo(void);
 
 int fm_06_3e_get_turbo_status(void);
 
+int fm_06_3e_set_pkg_pwr_lim(int package_power_limit1, 
+                             double time_window);
+
 int fm_06_3e_monitoring(FILE *outfile,
-                        int sampleLength,
+                        int seconds,
                         int interval,
-                        int continuous);
+                        int doSleep);
+
+int fm_06_3e_get_pstate(void);
+
+int fm_06_3e_set_pstate(int pstate);
 
 #endif
