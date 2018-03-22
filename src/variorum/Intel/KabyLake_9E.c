@@ -224,7 +224,7 @@ int fm_06_9e_dump_fixed_counter_data(int long_ver)
     else if (long_ver == 1)
     {
 // TODO ???
-       printf("not yet");
+        printf("not yet");
     }
     return 0;
 }

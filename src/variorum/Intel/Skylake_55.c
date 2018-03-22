@@ -61,9 +61,9 @@ static struct skylake_55_offsets msrs =
     .ia32_perfevtsel_counters[7]  = 0x18D,
 };
 
-int fm_06_55_isAlarmed = 0;
+static int fm_06_55_isAlarmed = 0;
 
-void fm_06_55_sigh(int signum)
+static void fm_06_55_sigh(int signum)
 {
     fm_06_55_isAlarmed = 1;
 }
@@ -225,7 +225,7 @@ int fm_06_55_get_power(int long_ver)
 
 int fm_06_55_enable_turbo(void)
 {
-     printf("Running %s\n", __FUNCTION__);
+    printf("Running %s\n", __FUNCTION__);
 
     unsigned int turbo_mode_disable_bit = 38;
     set_turbo_on(msrs.ia32_misc_enable, turbo_mode_disable_bit);
@@ -259,7 +259,7 @@ int fm_06_55_set_pkg_pwr_lim(int package_power_limit, double time_window)
     int nsockets, ncores, nthreads;
     variorum_set_topology(&nsockets, &ncores, &nthreads);
 
-    for(socket = 0; socket < nsockets; socket++)
+    for (socket = 0; socket < nsockets; socket++)
     {
         set_pkg_pwr_lim(socket, package_power_limit, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, time_window);
     }
@@ -267,7 +267,7 @@ int fm_06_55_set_pkg_pwr_lim(int package_power_limit, double time_window)
     return 0;
 }
 
-int fm_06_55_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
+int fm_06_55_monitoring(FILE *outfile, int seconds, int interval, int doSleep)
 {
     static int init = 0;
     if (!init)
@@ -275,8 +275,8 @@ int fm_06_55_monitoring(FILE *outfile, int sampleLength, int interval, int conti
         init = 1;
     }
     signal(SIGALRM, &fm_06_55_sigh);
-    alarm(sampleLength);
-    if (continuous == 0 )
+    alarm(seconds);
+    if (doSleep == 0)
     {
         while (!fm_06_55_isAlarmed)
         {
@@ -298,7 +298,6 @@ int fm_06_55_get_pstate(void)
 {
     dump_p_state(stdout, msrs.ia32_perf_status);
     return 0;
-
 }
 
 int fm_06_55_set_pstate(int pstate)
@@ -309,16 +308,15 @@ int fm_06_55_set_pstate(int pstate)
 
     variorum_set_topology(&nsockets, &ncore, &nthreads);
 
-    for (socket =0; socket < nsockets; socket++)
+    for (socket = 0; socket < nsockets; socket++)
     {
         for (core = 0; core < ncore; core++)
         {
-           for (thread=0; thread < nthreads; thread++)
-           {
-              set_p_state(socket, core, thread, pstate, msrs.ia32_perf_ctl);
-           }
+            for (thread = 0; thread < nthreads; thread++)
+            {
+                set_p_state(socket, core, thread, pstate, msrs.ia32_perf_ctl);
+            }
         }
     }
     return 0;
 }
-

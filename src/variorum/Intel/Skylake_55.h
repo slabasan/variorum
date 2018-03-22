@@ -94,7 +94,7 @@ int fm_06_55_disable_turbo(void);
 
 int fm_06_55_get_turbo_status(void);
 
-int fm_06_55_set_pkg_pwr_lim(int package_power_limit1, 
+int fm_06_55_set_pkg_pwr_lim(int package_power_limit1,
                              double time_window);
 
 int fm_06_55_monitoring(FILE *outfile,

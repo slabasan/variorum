@@ -92,7 +92,8 @@ int fm_06_3f_disable_turbo(void);
 
 int fm_06_3f_get_turbo_status(void);
 
-int fm_06_3f_set_pkg_pwr_lim(int package_power_limit1, double time_window);
+int fm_06_3f_set_pkg_pwr_lim(int package_power_limit1,
+                             double time_window);
 
 int fm_06_3f_monitoring(FILE *outfile,
                         int seconds,

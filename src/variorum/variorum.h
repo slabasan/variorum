@@ -156,8 +156,6 @@ int monitoring(FILE *outfile,
 
 int set_each_socket_pstate(int pstate);
 
-int set_each_pstate(int pstate);
-
 int dump_pstate(void);
 
 int dump_fixed_counters(void);

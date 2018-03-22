@@ -182,10 +182,10 @@ void dump_p_state(FILE *writedest, off_t msr_perf_status)
     int idx;
 
     if (!procs)
-    {   
+    {
         variorum_set_topology(&procs, NULL, NULL);
         perf_storage(&cd, msr_perf_status);
-    }   
+    }
 
     read_batch(PERF_DATA);
 

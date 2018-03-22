@@ -71,7 +71,6 @@ int set_intel_func_ptrs(void)
         g_platform.dump_pstate = fm_06_3e_get_pstate;
         g_platform.set_each_socket_pstate = fm_06_3e_set_pstate;
     }
-
     // Haswell 06_3F
     else if (*g_platform.intel_arch == FM_06_3F)
     {

@@ -370,44 +370,44 @@ int dump_turbo(void)
 
 int enable_turbo(void)
 {
-	int err = 0;
-	err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-	if (err)
-	{
-		return -1;
-	}
-	err = g_platform.enable_turbo();
-	if (err)
-	{
-		return -1;
-	}
-	err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-	if (err)
-	{
-		return -1;
-	}
-	return err;
+    int err = 0;
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    err = g_platform.enable_turbo();
+    if (err)
+    {
+        return -1;
+    }
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    return err;
 }
 
 int disable_turbo(void)
 {
-	int err = 0;
-	err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-	if (err)
-	{
-		return -1;
-	}
-	err = g_platform.disable_turbo();
-	if (err)
-	{
-		return -1;
-	}
-	err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-	if (err)
-	{
-		return -1;
-	}
-	return err;
+    int err = 0;
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    err = g_platform.disable_turbo();
+    if (err)
+    {
+        return -1;
+    }
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    return err;
 }
 
 int monitoring(FILE *outfile, int sampleTime, int interval, int continuous)
@@ -474,7 +474,7 @@ int dump_pstate(void)
 
 }
 
-int set_each_pstate(int pstate)
+int set_each_socket_pstate(int pstate)
 {
     int err = 0;
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);

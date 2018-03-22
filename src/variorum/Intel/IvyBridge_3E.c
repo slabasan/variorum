@@ -65,9 +65,9 @@ static struct ivybridge_3e_offsets msrs =
     .msrs_pcu_pmon_evtsel[3]      = 0xC33
 };
 
-int fm_06_3e_isAlarmed = 0;
+static int fm_06_3e_isAlarmed = 0;
 
-void fm_06_3e_sigh(int signum)
+static void fm_06_3e_sigh(int signum)
 {
     fm_06_3e_isAlarmed = 1;
 }
@@ -275,7 +275,7 @@ int fm_06_3e_set_pkg_pwr_lim(int package_power_limit, double time_window)
     int nsockets, ncores, nthreads;
     variorum_set_topology(&nsockets, &ncores, &nthreads);
 
-    for(socket = 0; socket < nsockets; socket++)
+    for (socket = 0; socket < nsockets; socket++)
     {
         set_pkg_pwr_lim(socket, package_power_limit, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, time_window);
     }
@@ -283,7 +283,7 @@ int fm_06_3e_set_pkg_pwr_lim(int package_power_limit, double time_window)
     return 0;
 }
 
-int fm_06_3e_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
+int fm_06_3e_monitoring(FILE *outfile, int seconds, int interval, int doSleep)
 {
     static int init = 0;
     if (!init)
@@ -291,8 +291,8 @@ int fm_06_3e_monitoring(FILE *outfile, int sampleLength, int interval, int conti
         init = 1;
     }
     signal(SIGALRM, &fm_06_3e_sigh);
-    alarm(sampleLength);
-    if (continuous == 0 )
+    alarm(seconds);
+    if (doSleep == 0)
     {
         while (!fm_06_3e_isAlarmed)
         {
@@ -314,7 +314,6 @@ int fm_06_3e_get_pstate(void)
 {
     dump_p_state(stdout, msrs.ia32_perf_status);
     return 0;
-
 }
 
 int fm_06_3e_set_pstate(int pstate)
@@ -325,16 +324,15 @@ int fm_06_3e_set_pstate(int pstate)
 
     variorum_set_topology(&nsockets, &ncore, &nthreads);
 
-    for (socket =0; socket < nsockets; socket++)
+    for (socket = 0; socket < nsockets; socket++)
     {
         for (core = 0; core < ncore; core++)
         {
-           for (thread=0; thread < nthreads; thread++)
-           {
-              set_p_state(socket, core, thread, pstate, msrs.ia32_perf_ctl);
-           }
+            for (thread = 0; thread < nthreads; thread++)
+            {
+                set_p_state(socket, core, thread, pstate, msrs.ia32_perf_ctl);
+            }
         }
     }
     return 0;
 }
-
