@@ -6,8 +6,6 @@
 #include <variorum_timers.h>
 #include <Intel/Broadwell_4F.h>
 
-#define BILLION 1000000000L
-
 int tester(void)
 {
     int err = 0;

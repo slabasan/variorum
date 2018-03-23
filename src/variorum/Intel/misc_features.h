@@ -48,6 +48,24 @@ int dump_turbo_status(FILE *writedest,
                       off_t msr_misc_enable,
                       unsigned int turbo_mode_disable_bit);
 
+/// @brief TODO Set the turbo ratio limit across all sockets and cores
+/// Function will need to convert the user provided base 10 value to correct hex value
+/// the semaphore (bit 63 of 0x1AF on Haswell/msr_turbo_ratio_limit2) needs to be set after the write has been completed
+/// @param [in] socket Unique socket identifier
+/// @param [in] core Unique core identifier
+/// @param [in] thread Unique thread identifier
+/// @param [in] turbo_ratio_limit Value to set turbo ratio limit
+/// @param [in] msr_turbo_ratio_limit Unique MSR address
+/// @param [in] msr_turbo_ratio_limit1 Unique MSR address
+/// @param [in] msr_turbo_ratio_limit2 Unique MSR address
+/// @return Error code
+int set_turbo_limit_ratio(int socket,
+                          int core, 
+                          int thread, 
+                          int turbo_ratio_limit, 
+                          off_t msr_turbo_ratio_limit, 
+                          off_t msr_turbo_ratio_limit1, 
+                          off_t msr_turbo_ratio_limit2);
 
 ///// These per core functions seemingly only for Intel Signatures 06_57H (KNL) and
 ///// 06_85H (future Xeon Phi), at the moment.

@@ -91,20 +91,36 @@ int fm_06_4f_enable_turbo(void);
 int fm_06_4f_disable_turbo(void);
 
 int fm_06_4f_get_turbo_status(void);
-
+//
+///// @brief monitoring of performance counters and metrics
+///// @param [in] outfile is the file descriptor of where the output should be written to
+///// @param [in] seconds is the total number of seconds the monitoring will be run
+///// @param [in] interval is the amount of time that will elapse between taking samples
+///// @param [in] continuous should be set if the monitoring should be constant without any sleep
+///// @return Error code
 int fm_06_4f_monitoring(FILE *outfile,
                         int seconds,
                         int interval,
-                        int doSleep);
-
+                        int continuous);
+//
+///// @brief print the current pstate values
+///// @return Error code
 int fm_06_4f_get_pstate(void);
-
+//
+///// @brief set identical pstates across all sockets and cores
+///// @param [in] pstate is the integer value that the pstate should be set to
+///// @return Error code
 int fm_06_4f_set_pstate(int pstate);
-
-/// @brief set both power limit and RAPL time window
+//
+///// @brief set both power limit and RAPL time window
+///// @param [in] package_power_limit integer value to set the RAPL power limit 1
+///// @param [in] time_window integer value to set the RAPL time window 1 to
+///// @return Error code
 int fm_06_4f_set_pkg_pwr_lim(int package_power_limit,
 			                 double time_window);
 
+//
+///// @brief TODO set both RAPL power limits
 //int fm_06_4f_set_2_power_limits(int package_power_limit1,
 //                                int package_power_limit2);
 

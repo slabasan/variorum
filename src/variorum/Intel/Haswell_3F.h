@@ -28,6 +28,8 @@ struct haswell_3f_offsets
     const off_t msr_turbo_ratio_limit;
     /// @brief Address for TURBO_RATIO_LIMIT1.
     const off_t msr_turbo_ratio_limit1;
+    /// @brief Address for TURBO_RATIO_LIMIT2.
+    const off_t msr_turbo_ratio_limit2;    
     /// @brief Address for IA32_PACKAGE_THERM_STATUS.
     const off_t ia32_package_therm_status;
     /// @brief Address for IA32_PACKAGE_THERM_INTERRUPT.
@@ -91,17 +93,32 @@ int fm_06_3f_enable_turbo(void);
 int fm_06_3f_disable_turbo(void);
 
 int fm_06_3f_get_turbo_status(void);
-
+//
+///// @brief set both power limit and RAPL time window
+///// @param [in] package_power_limit The value to set the RAPL lower power limit 1 to
+///// @param [in] time_window The value to set the RAPL time window 1 to
 int fm_06_3f_set_pkg_pwr_lim(int package_power_limit1,
                              double time_window);
-
+//
+///// @brief monitoring of performance counters and metrics
+//// @param [in] outfile The file stream for writing output
+///// @param [in] seconds is the total number of seconds the monitoring will be run
+///// @param [in] interval is the amount of time that will elapse between taking samples
+///// @param [in] continuous should be set if the monitoring should be constant without any sleep
 int fm_06_3f_monitoring(FILE *outfile,
                         int seconds,
                         int interval,
-                        int doSleep);
-
+                        int continuous);
+//
+///// @brief print the current pstate values
 int fm_06_3f_get_pstate(void);
-
+//
+///// @brief set identical pstates across all sockets and cores
+//// @param [in] pstate is the value, in base 10, that the pstate should be set to
 int fm_06_3f_set_pstate(int pstate);
-
+//
+//// @brief TODO set the turbo ratio limit across all cores
+//// @param [in] turbo_ratio_limit The value to set the turbo ratio limit to, in base 10.
+// NOTE: will need to convert the base 10 value into hex
+int fm_06_3f_set_turbo_ratio(int turbo_ratio_limit);
 #endif

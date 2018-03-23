@@ -127,11 +127,18 @@ void read_clocks_data(FILE *writedest,
 
 /// @brief Print current p-state.
 ///
-/// @param [in] writedest File stream where output will be written to.
+/// @param [in] writedest File stream where output will be written to
+/// @param [in] msr_perf_status Unique MSR address for IA32_PERF_STATUS..
 void dump_p_state(FILE *writedest,
                   off_t msr_perf_status);
 
-
+/// @brief set identical pstates across all sockets and cores
+/// 
+/// @param [in] socket Unique socket/package identifier.
+/// @param [in] core Unique core identifier
+/// @param [in] thread Unique thread identifier
+/// @param [in] pstate The value to set the pstate to
+/// @param [in] msr_perf_ctl Unique MSR address for IA#@_PERF_CTL 
 void set_p_state(unsigned socket,
                  unsigned core,
                  unsigned thread,

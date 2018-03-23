@@ -148,14 +148,22 @@ int enable_turbo(void);
 /////
 ///// @return Error code.
 int disable_turbo(void);
-
+//
+///// @brief monitoring performance counters and metrics
+/////
+///// @return Error code
 int monitoring(FILE *outfile,
                int sampleTime,
                int interval,
                int continuous);
-
+//
+///// @brief set identical pstates across all sockets and cores
+///// @param [in] integer value that the pstate should be set at
+///// @return Error code
 int set_each_socket_pstate(int pstate);
-
+//
+///// @brief print the current pstate settings
+///// @return Error code
 int dump_pstate(void);
 
 int dump_fixed_counters(void);

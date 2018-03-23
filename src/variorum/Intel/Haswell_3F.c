@@ -22,6 +22,7 @@ static struct haswell_3f_offsets msrs =
     .msr_temperature_target       = 0x1A2,
     .msr_turbo_ratio_limit        = 0x1AD,
     .msr_turbo_ratio_limit1       = 0x1AE,
+    .msr_turbo_ratio_limit2       = 0x1AF,
     .ia32_package_therm_status    = 0x1B1,
     .ia32_package_therm_interrupt = 0x1B2,
     .ia32_fixed_counters[0]       = 0x309,
@@ -284,8 +285,8 @@ int fm_06_3f_monitoring(FILE *outfile, int seconds, int interval, int doSleep)
         init = 1;
     }
     signal(SIGALRM, &fm_06_3f_sigh);
-    alarm(seconds);
-    if (doSleep == 0)
+    alarm(seconds); // monitoring will exit after given number of seconds
+    if (doSleep == 0) // sleep for a given amount of time, as specified by the interval
     {
         while (!fm_06_3f_isAlarmed)
         {
@@ -293,7 +294,7 @@ int fm_06_3f_monitoring(FILE *outfile, int seconds, int interval, int doSleep)
             get_monitoring_data(outfile, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter, msrs.ia32_perf_status, msrs.ia32_perfevtsel_counters, msrs.ia32_perfmon_counters);
         }
     }
-    else
+    else // monitoring will be continuous without a sleep
     {
         while (!fm_06_3f_isAlarmed)
         {
@@ -331,6 +332,7 @@ int fm_06_3f_set_pstate(int pstate)
 }
 
 // TODO
+/*
 int fm_06_3f_set_turbo_ratio(int turbo_ratio_limit)
 {
     int core, socket;
@@ -345,9 +347,10 @@ int fm_06_3f_set_turbo_ratio(int turbo_ratio_limit)
         {
             for (thread = 0; thread < nthreads; thread++)
             {
-                //add call here
+                set_turbo_limit_ratio(socket, core, thread, turbo_ratio_limit, msrs.msr_turbo_ratio_limit, msrs.msr_turbo_ratio_limit1, msrs.msr_turbo_ratio_limit2);
             }
         }
     }
     return 0;
 }
+*/

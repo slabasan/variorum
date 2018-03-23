@@ -366,12 +366,23 @@ void read_fixed_counter_data(FILE *writedest,
                              off_t msr_rapl_unit,
                              off_t msr_pkg_energy_status,
                              off_t msr_dram_energy_status);
-
+/// @brief collect and output performance counters and metrics
+//
+/// @param [in] writedest File stream where output will be written to
+/// @param [in] msrs_fixed_ctrs Array storing unique MSR addresses for fixed counters
+/// @param [in] msr_perf_global_ctrl Unique MSR address for MSR_PERF_GLOBAL_CTRL
+/// @param [in] msr_fixed_counter_ctrl Unique MSR address for MSR_FIXED_COUNTER_CTRL
+/// @param [in] msr_pkg_power_limit Unique MSR address for MSR_PKG_POWER_LIMIT
+/// @param [in] msr_rapl_unit Unique MSR address for MSR_RAPL_POWER_UNIT
+/// @param [in] msr_pkg_energy_status Unique MSR address for MSR_PKG_ENERGY_STATUS
+/// @param [in] msr_dram_energy_status Unique MSR address for MSR_DRAM_ENERGY_STATUS.
+/// @param [in] msr_aperf Unique MSR address for IA32_APERF
+/// @param [in] msr_mperf Unique MSR address for IA32_MPERF
 void get_monitoring_data(FILE *writedest,
                          off_t *msrs_fixed_ctrs,
                          off_t msr_perf_global_ctrl,
                          off_t msr_fixed_counter_ctrl,
-                         off_t msr_power_limit,
+                         off_t msr_pkg_power_limit,
                          off_t msr_rapl_unit,
                          off_t msr_pkg_energy_status,
                          off_t msr_dram_energy_status,
