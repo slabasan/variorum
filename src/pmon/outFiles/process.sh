@@ -1,7 +1,11 @@
 #!/bin/bash
 
+#### This script provides post-processing of pmon output data when the turbo ratio limit has been adjusted
+
 if [ "$#" -ne 2 ]; then
     echo "Usage: ./process.sh MS numRuns"
+    echo "MS: the sampling interval, in microseconds, of the experimetal runs"
+    echo "numRuns: how many experimental runs in total were completed"      
     exit 1
 fi
 
@@ -15,7 +19,7 @@ lims=(28 29 30 31 32 33 34 35 36 37 38) #the turbo ratio limits. Should match
 for n in "${lims[@]}"; do
     echo $n
     for i in $(seq 1 ${nruns}); do
-        iter=$(grep "total iterations:" FS_out_${MS}_${i}_${n} | awk '{print $3}')
+        iter=$(grep "total iterations:" FS_out_${MS}_${i}_${n} | awk '{print $3}') # total iterations completed by FIRESTARTER, from the FIRESTARTER output file
         awk '{print $0 ","'${iter}'","'${n}'","'${i}'}' ${host}.log.${MS}_${i}_${n} >> ${host}log_${MS}_${i}_${n}
         head -16 ${host}log_${MS}_${i}_${n} >> ${host}_end_to_end_${n}_${i}
         tail -16 ${host}log_${MS}_${i}_${n} >> ${host}_end_to_end_${n}_${i}

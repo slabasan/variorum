@@ -9,6 +9,10 @@ MSR_TOOLS_DIR=$HOME/msr-tools-1.1
 
 if [ "$#" -ne 4 ]; then
     echo "usage: ./monitoring.sh <sample rate in microseconds> <turbo limit in hex> <turbo limit in dec> <num runs>"
+    echo "sample rate: how often to take samples in microseconds"
+    echo "turbo limit in hex: the hex value for setting the max turbo ratio limit"
+    echo "turbo limit in dec: the value for the max turbo ratio limit in base 10"
+    echo "num runs: the number of times the program should be run and data collected" 
     exit 1
 fi
 

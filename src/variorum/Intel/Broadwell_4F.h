@@ -121,7 +121,10 @@ int fm_06_4f_set_pkg_pwr_lim(int package_power_limit,
 
 //
 ///// @brief TODO set both RAPL power limits
-//int fm_06_4f_set_2_power_limits(int package_power_limit1,
+/// @param [in] package_power_limit1 The value to set the lower RAPL power limit to
+/// @param [in] package_power_limit2 The value to set the upper RAPL power limit to
+//
+////int fm_06_4f_set_2_power_limits(int package_power_limit1,
 //                                int package_power_limit2);
 
 #endif

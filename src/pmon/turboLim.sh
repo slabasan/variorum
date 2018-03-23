@@ -1,9 +1,10 @@
 #!/bin/bash
 
 ### This script provides input to monitoring_turboLims.sh
-
-MS=10000
-nRuns=2
+### It is useful for automating experimental runs across multiple turbo ratio limits
+ 
+MS=10000 # the sampling interval, in microseconds
+nRuns=25 #the number of times to repeat the run
 
 echo "Starting Turbo Limit 28"
 turbo=0x1c1c1c1c1c1c1c1c

@@ -268,22 +268,6 @@ int fm_06_4f_get_turbo_status(void)
     return 0;
 }
 
-
-//int fm_06_4f_set_2_power_limits(int package_power_limit1, int package_power_limit2)
-//{
-//    int socket;
-//    int nsockets, ncores, nthreads;
-//    variorum_set_topology(&nsockets, &ncores, &nthreads);
-//
-//    printf("Running %s\n", __FUNCTION__);
-//
-//    for (socket = 0; socket < nsockets; socket++)
-//    {
-//        set_package_2_power_limit(socket, package_power_limit1, package_power_limit2, msrs.msr_pkg_power_limit, msrs.msr_rapl_power_unit);
-//    }
-//    return 0;
-//}
-
 int fm_06_4f_set_pkg_pwr_lim(int package_power_limit, double time_window)
 {
     int socket;
