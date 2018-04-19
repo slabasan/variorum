@@ -52,7 +52,8 @@ void take_measurement(void)
     pthread_mutex_lock(&mlock);
 
     /* RAPL reads. */
-    poll_power(logfile);
+    //poll_power(logfile);
+    monitoring(logfile);
 
 #if 0
     total_joules += rapl_data[0] + rapl_data[1];
