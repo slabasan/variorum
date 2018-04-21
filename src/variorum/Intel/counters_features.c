@@ -11,6 +11,7 @@
 #include <power_features.h>
 #include <variorum_cpuid.h>
 #include <variorum_error.h>
+#include <variorum_timers.h>
 
 int cpuid_num_pmc(void)
 {
@@ -850,6 +851,8 @@ void get_all_power_data_fixed(FILE *writedest, off_t msr_pkg_power_limit, off_t 
     variorum_set_topology(&nsockets, NULL, &nthreads);
     gethostname(hostname, 1024);
 
+    get_power(msr_rapl_unit, msr_package_energy_status, msr_dram_energy_status);
+
     if (!init_get_power_data)
     {
         init_get_power_data = 1;
@@ -884,7 +887,6 @@ void get_all_power_data_fixed(FILE *writedest, off_t msr_pkg_power_limit, off_t 
         fprintf(writedest, "\n");
     }
 
-    get_power(msr_rapl_unit, msr_package_energy_status, msr_dram_energy_status);
     read_batch(FIXED_COUNTERS_DATA);
 
     rlim_idx = 0;

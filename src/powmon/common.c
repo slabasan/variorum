@@ -44,11 +44,11 @@ int init_data(void)
 
 void take_measurement(void)
 {
-    uint64_t instr0 = 0;
-    uint64_t instr1 = 0;
-    uint64_t core0 = 0;
-    uint64_t core1 = 0;
-    double rapl_data[10];
+    //uint64_t instr0 = 0;
+    //uint64_t instr1 = 0;
+    //uint64_t core0 = 0;
+    //uint64_t core1 = 0;
+    //double rapl_data[10];
     pthread_mutex_lock(&mlock);
 
     /* RAPL reads. */
@@ -84,7 +84,7 @@ void *power_measurement(void *arg)
     struct mstimer timer;
     // According to the Intel docs, the counter wraps at most once per second.
     // 100 ms should be short enough to always get good information.
-    init_msTimer(&timer, 100);
+    init_msTimer(&timer, 50);
     start = now_ms();
 
     timer_sleep(&timer);
