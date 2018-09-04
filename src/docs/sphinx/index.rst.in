@@ -60,3 +60,4 @@ Programming and APIs
 **API Reference**. The `API Reference`_ is generated from the source.
 
 .. _`API Reference`: @CMAKE_CURRENT_BINARY_DIR@/../dox/html/index.html
+

@@ -7,3 +7,4 @@ Variorum Documentation
    Overview
    BuildingVariorum
    VariorumAPI
+   VariorumSource

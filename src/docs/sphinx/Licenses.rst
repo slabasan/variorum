@@ -57,16 +57,10 @@ Here is a list of the software components used by Alpine in source form and the 
 C and C++ Libraries
 """""""""""""""""""
 - *gtest*: thirdparty_builtin/gtest-1.7.0/LICENSE (BSD Style License)
-- *lodepng*: thirdparty_builtin/lodepng/LICENSE (BSD Style License)
-
-Fortran Libraries
-"""""""""""""""""
-- *fruit*: thirdparty_builtin/fruit-3.3.9/LICENSE.txt (BSD Style License)
 
 Build System
 """"""""""""
 - *CMake*: http://www.cmake.org/licensing/ (BSD Style License)
-- *Spack*: http://software.llnl.gov/spack (LGPL License)
 
 Proxy Applications
 """"""""""""""""""
