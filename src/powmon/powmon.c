@@ -85,7 +85,7 @@ int main(int argc, char **argv)
                         "OVERVIEW\n"
                         "  Powmon is a utility for sampling and printing the\n"
                         "  power consumption (for package and DRAM) and power\n"
-                        "  limit per socket for systems with two sockets.\n"
+                        "  limit per socket in a node.\n"
                         "OPTIONS\n"
                         "  --help | -h\n"
                         "      Display this help information, then exit.\n"
@@ -157,6 +157,8 @@ int main(int argc, char **argv)
     }
 #endif
 
+    char *fname_dat;
+    char *fname_summary;
     if (highlander())
     {
         /* Start the log file. */
@@ -164,19 +166,18 @@ int main(int argc, char **argv)
         char hostname[64];
         gethostname(hostname,64);
 
-        char *fname;
-        asprintf(&fname, "%s.powmon.dat", hostname);
+        asprintf(&fname_dat, "%s.powmon.dat", hostname);
 
-        logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
+        logfd = open(fname_dat, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname_dat, strerror(errno));
             return 1;
         }
         logfile = fdopen(logfd, "w");
         if (logfile == NULL)
         {
-            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname_dat, strerror(errno));
             return 1;
         }
 
@@ -193,7 +194,7 @@ int main(int argc, char **argv)
         if (app_pid == 0)
         {
             /* I'm the child. */
-            printf("FOO %s %s %s\n", arg[0], arg[1], arg[2]);
+            printf("Profiling: %s %s %s\n", arg[0], arg[1], arg[2]);
             execvp(arg[0], &arg[0]);
             printf("fork failure\n");
             return 1;
@@ -210,18 +211,18 @@ int main(int argc, char **argv)
         end = now_ms();
 
         /* Output summary data. */
-        asprintf(&fname, "%s.powmon.summary", hostname);
+        asprintf(&fname_summary, "%s.powmon.summary", hostname);
 
-        logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
+        logfd = open(fname_summary, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname_summary, strerror(errno));
             return 1;
         }
         summaryfile = fdopen(logfd, "w");
         if (summaryfile == NULL)
         {
-            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname_summary, strerror(errno));
             return 1;
         }
 
@@ -246,8 +247,7 @@ int main(int argc, char **argv)
         {
             /* I'm the child. */
             execvp(arg[0], &arg[0]);
-            printf("BAR %s\n", argv[1]);
-            printf("Fork failure\n");
+            printf("Fork failure: %s\n", argv[1]);
             return 1;
         }
         /* Wait. */
@@ -256,6 +256,9 @@ int main(int argc, char **argv)
         highlander_wait();
     }
 
+    printf("Output Files\n"
+           "  %s\n"
+           "  %s\n\n", fname_dat, fname_summary);
     highlander_clean();
     return 0;
 }

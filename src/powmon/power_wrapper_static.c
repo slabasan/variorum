@@ -152,7 +152,7 @@ int main(int argc, char **argv)
     }
 
     char *app_split = strtok(app, " ");
-    int n_spaces = 0, i;
+    int n_spaces = 0;
     while (app_split)
     {
         arg = realloc (arg, sizeof (char*) * ++n_spaces);
