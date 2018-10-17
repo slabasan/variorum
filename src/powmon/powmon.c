@@ -135,10 +135,10 @@ int main(int argc, char **argv)
     }
 
     char *app_split = strtok(app, " ");
-    int n_spaces = 0, i;
+    int n_spaces = 0;
     while (app_split)
     {
-        arg = realloc (arg, sizeof (char*) * ++n_spaces);
+        arg = realloc(arg, sizeof(char *) * ++n_spaces);
 
         if (arg == NULL)
         {
@@ -147,10 +147,11 @@ int main(int argc, char **argv)
         arg[n_spaces-1] = app_split;
         app_split = strtok(NULL, " ");
     }
-    arg = realloc (arg, sizeof (char*) * (n_spaces+1));
+    arg = realloc(arg, sizeof(char *) * (n_spaces + 1));
     arg[n_spaces] = 0;
 
 #ifdef VARIORUM_DEBUG
+    int i;
     for (i = 0; i < (n_spaces+1); ++i)
     {
         printf ("arg[%d] = %s\n", i, arg[i]);
@@ -194,9 +195,15 @@ int main(int argc, char **argv)
         if (app_pid == 0)
         {
             /* I'm the child. */
-            printf("Profiling: %s %s %s\n", arg[0], arg[1], arg[2]);
+            printf("Profiling:");
+            int i = 0;
+            for (i = 0; i < n_spaces; i++)
+            {
+                printf(" %s", arg[i]);
+            }
+            printf("\n");
             execvp(arg[0], &arg[0]);
-            printf("fork failure\n");
+            printf("Fork failure\n");
             return 1;
         }
         /* Wait. */

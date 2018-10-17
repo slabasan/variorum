@@ -66,7 +66,7 @@ static unsigned long start;
 static unsigned long end;
 static FILE *logfile = NULL;
 static FILE *summaryfile = NULL;
-static double watt_cap = 0.0;
+static int watt_cap = 0;
 
 static pthread_mutex_t mlock;
 static int *shmseg;
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     const char *usage = "\n"
                         "NAME\n"
                         "  power_wrapper_static - Package and DRAM power\n"
-                        "  monitor, adjusting the power cap stewise every\n"
+                        "  monitor, adjusting the power cap stepwise every\n"
                         "  500 ms.\n"
                         "SYNOPSIS\n"
                         "  %s [--help | -h] [-c] -w -a \"<executable> <args> ...\"\n"
@@ -89,14 +89,14 @@ int main(int argc, char **argv)
                         "  Power_wrapper_static is a utility for setting a\n"
                         "  power cap, and sampling and printing the power\n"
                         "  consumption (for package and DRAM) and power limit\n"
-                        "  per socket for systems with two sockets.\n"
+                        "  per socket in a node.\n"
                         "OPTIONS\n"
                         "  --help | -h\n"
                         "      Display this help information, then exit.\n"
                         "  -a\n"
                         "      Application and arguments in quotes.\n"
                         "  -w\n"
-                        "      Power cap.\n"
+                        "      Package power cap (integer).\n"
                         "  -c\n"
                         "      Remove stale shared memory.\n"
                         "\n";
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
         {
             case 'c':
                 highlander_clean();
-                printf("Exiting power_wrapper_dynamic...\n");
+                printf("Exiting power_wrapper_static...\n");
                 return 0;
             case 'a':
                 app_flag = 1;
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
                 break;
             case 'w':
                 watts_flag = 1;
-                watt_cap = atof(optarg);
+                watt_cap = atoi(optarg);
                 break;
             case '?':
                 fprintf(stderr, "\nError: unknown parameter \"-%c\"\n", optopt);
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
     int n_spaces = 0;
     while (app_split)
     {
-        arg = realloc (arg, sizeof (char*) * ++n_spaces);
+        arg = realloc(arg, sizeof(char *) * ++n_spaces);
 
         if (arg == NULL)
         {
@@ -164,9 +164,19 @@ int main(int argc, char **argv)
         arg[n_spaces-1] = app_split;
         app_split = strtok(NULL, " ");
     }
-    arg = realloc (arg, sizeof (char*) * (n_spaces+1));
+    arg = realloc(arg, sizeof(char *) * (n_spaces + 1));
     arg[n_spaces] = 0;
 
+#ifdef VARIORUM_DEBUG
+    int i;
+    for (i = 0; i < (n_spaces+1); ++i)
+    {
+        printf ("arg[%d] = %s\n", i, arg[i]);
+    }
+#endif
+
+    char *fname_dat;
+    char *fname_summary;
     if (highlander())
     {
         /* Start the log file. */
@@ -174,42 +184,50 @@ int main(int argc, char **argv)
         char hostname[64];
         gethostname(hostname, 64);
 
-        char *fname;
-#if 0
-        asprintf(&fname, "%s.power.dat", hostname);
+        asprintf(&fname_dat, "%s.power.dat", hostname);
 
-        logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
+        logfd = open(fname_dat, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname_dat, strerror(errno));
             return 1;
         }
         logfile = fdopen(logfd, "w");
         if (logfile == NULL)
         {
-            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname_dat, strerror(errno));
             return 1;
         }
-#endif
 
         //read_rapl_init();
 
         /* Set the cap. */
-        watt_cap = strtod(argv[1], NULL);
         //set_rapl_power(watt_cap, watt_cap);
+        printf("Setting each package power limit to %dW\n", watt_cap);
         set_each_socket_power_limit(watt_cap);
 
         /* Start power measurement thread. */
+        pthread_attr_t mattr;
         pthread_t mthread;
+        pthread_attr_init(&mattr);
+        pthread_attr_setdetachstate(&mattr, PTHREAD_CREATE_DETACHED);
         pthread_mutex_init(&mlock, NULL);
-        pthread_create(&mthread, NULL, power_measurement, NULL);
+        pthread_create(&mthread, &mattr, power_measurement, NULL);
 
         /* Fork. */
         pid_t app_pid = fork();
-        if(app_pid == 0)
+        if (app_pid == 0)
         {
             /* I'm the child. */
-            execvp(argv[2], &argv[2]);
+            printf("Profiling:");
+            int i = 0;
+            for (i = 0; i < n_spaces; i++)
+            {
+                printf(" %s", arg[i]);
+            }
+            printf("\n");
+            execvp(arg[0], &arg[0]);
+            printf("Fork failure\n");
             return 1;
         }
         /* Wait. */
@@ -223,21 +241,22 @@ int main(int argc, char **argv)
         take_measurement();
         end = now_ms();
 
-        asprintf(&fname, "%s.power.summary", hostname);
+        /* Output summary data. */
+        asprintf(&fname_summary, "%s.power.summary", hostname);
 
-        logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
+        logfd = open(fname_summary, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname_summary, strerror(errno));
             return 1;
         }
         summaryfile = fdopen(logfd, "w");
         if (summaryfile == NULL)
         {
-            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname_summary, strerror(errno));
             return 1;
         }
-        /* Output summary data. */
+
         char *msg;
         //asprintf(&msg, "host: %s\npid: %d\ntotal: %lf\nallocated: %lf\nmax_watts: %lf\nmin_watts: %lf\nruntime ms: %lu\n,start: %lu\nend: %lu\n", hostname, app_pid, total_joules, limit_joules, max_watts, min_watts, end-start, start, end);
         asprintf(&msg, "host: %s\npid: %d\nruntime ms: %lu\nstart: %lu\nend: %lu\n", hostname, app_pid, end-start, start, end);
@@ -245,8 +264,11 @@ int main(int argc, char **argv)
         fprintf(summaryfile, "%s", msg);
         fclose(summaryfile);
         close(logfd);
+
         shmctl(shmid, IPC_RMID, NULL);
         shmdt(shmseg);
+
+        pthread_attr_destroy(&mattr);
     }
     else
     {
@@ -255,7 +277,8 @@ int main(int argc, char **argv)
         if (app_pid == 0)
         {
             /* I'm the child. */
-            execvp(argv[2], &argv[2]);
+            execvp(arg[0], &arg[0]);
+            printf("Fork failure: %s\n", argv[1]);
             return 1;
         }
         /* Wait. */
@@ -264,5 +287,9 @@ int main(int argc, char **argv)
         highlander_wait();
     }
 
+    printf("Output Files\n"
+           "  %s\n"
+           "  %s\n\n", fname_dat, fname_summary);
+    highlander_clean();
     return 0;
 }

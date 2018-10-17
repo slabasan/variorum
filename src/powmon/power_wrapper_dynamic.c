@@ -59,11 +59,14 @@ static double max_watts = 0.0;
 static double min_watts = 1024.0;
 #endif
 
+/*************************/
+/* HW Counter Structures */
+/*************************/
 static unsigned long start;
 static unsigned long end;
 static FILE *logfile = NULL;
 static FILE *summaryfile = NULL;
-static double watt_cap = 0.0;
+static int watt_cap = 0;
 static volatile int poll_num = 0;
 static volatile int poll_dir = 5;
 
@@ -81,10 +84,10 @@ void *power_set_measurement(void *arg)
     struct mstimer timer;
     //set_rapl_power(watt_cap, watt_cap);
     set_each_socket_power_limit(watt_cap);
-    double watts = watt_cap;
+    int watts = watt_cap;
     // According to the Intel docs, the counter wraps a most once per second.
-    // 100 ms should be short enough to always get good information.
-    init_msTimer(&timer, 1500);
+    // 500 ms should be short enough to always get good information.
+    init_msTimer(&timer, 500);
     init_data();
     start = now_ms();
 
@@ -105,11 +108,13 @@ void *power_set_measurement(void *arg)
             }
             watts += poll_dir;
             //set_rapl_power(watts, watts);
-            set_each_socket_power_limit(watt_cap);
+            printf("Setting each package power limit to %dW\n", watts);
+            set_each_socket_power_limit(watts);
         }
         poll_num++;
         timer_sleep(&timer);
     }
+    return arg;
 }
 
 int main(int argc, char**argv)
@@ -117,7 +122,7 @@ int main(int argc, char**argv)
     const char *usage = "\n"
                         "NAME\n"
                         "  power_wrapper_dynamic - Package and DRAM power\n"
-                        "  monitor, adjusting the power cap stewise every\n"
+                        "  monitor, adjusting the power cap stepwise every\n"
                         "  500 ms.\n"
                         "SYNOPSIS\n"
                         "  %s [--help | -h] [-c] -w -a \"<executable> <args> ...\"\n"
@@ -125,15 +130,14 @@ int main(int argc, char**argv)
                         "  Power_wrapper_dynamic is a utility for adjusting\n"
                         "  the power cap stepwise every 500 ms, and sampling\n"
                         "  and printing the power consumption (for package\n"
-                        "  and DRAM) and power limit per socket for systems\n"
-                        "  with two sockets.\n"
+                        "  and DRAM) and power limit per socket in a node.\n"
                         "OPTIONS\n"
                         "  --help | -h\n"
                         "      Display this help information, then exit.\n"
                         "  -a\n"
                         "      Application and arguments in quotes.\n"
                         "  -w\n"
-                        "      Power cap.\n"
+                        "      Package power cap (integer).\n"
                         "  -c\n"
                         "      Remove stale shared memory.\n"
                         "\n";
@@ -165,7 +169,7 @@ int main(int argc, char**argv)
                 break;
             case 'w':
                 watts_flag = 1;
-                watt_cap = atof(optarg);
+                watt_cap = atoi(optarg);
                 break;
             case '?':
                 fprintf(stderr, "\nError: unknown parameter \"-%c\"\n", optopt);
@@ -192,7 +196,7 @@ int main(int argc, char**argv)
     int n_spaces = 0;
     while (app_split)
     {
-        arg = realloc (arg, sizeof (char*) * ++n_spaces);
+        arg = realloc(arg, sizeof(char *) * ++n_spaces);
 
         if (arg == NULL)
         {
@@ -201,9 +205,19 @@ int main(int argc, char**argv)
         arg[n_spaces-1] = app_split;
         app_split = strtok(NULL, " ");
     }
-    arg = realloc (arg, sizeof (char*) * (n_spaces+1));
+    arg = realloc(arg, sizeof(char *) * (n_spaces + 1));
     arg[n_spaces] = 0;
 
+#ifdef VARIORUM_DEBUG
+    int i;
+    for (i = 0; i < (n_spaces+1); ++i)
+    {
+        printf ("arg[%d] = %s\n", i, arg[i]);
+    }
+#endif
+
+    char *fname_dat;
+    char *fname_summary;
     if (highlander())
     {
         /* Start the log file. */
@@ -211,40 +225,50 @@ int main(int argc, char**argv)
         char hostname[64];
         gethostname(hostname, 64);
 
-        char *fname;
-#if 0
-        asprintf(&fname, "%s.power.dat", hostname);
+        asprintf(&fname_dat, "%s.power.dat", hostname);
 
-        logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
+        logfd = open(fname_dat, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname_dat, strerror(errno));
             return 1;
         }
         logfile = fdopen(logfd, "w");
         if (logfile == NULL)
         {
-            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname_dat, strerror(errno));
             return 1;
         }
-#endif
 
         //read_rapl_init();
 
         /* Set the cap. */
         //set_rapl_power(watt_cap, watt_cap);
+        printf("Setting each package power limit to %dW\n", watt_cap);
         set_each_socket_power_limit(watt_cap);
 
         /* Start power measurement thread. */
+        pthread_attr_t mattr;
         pthread_t mthread;
-        pthread_create(&mthread, NULL, power_set_measurement, NULL);
+        pthread_attr_init(&mattr);
+        pthread_attr_setdetachstate(&mattr, PTHREAD_CREATE_DETACHED);
+        pthread_mutex_init(&mlock, NULL);
+        pthread_create(&mthread, &mattr, power_set_measurement, NULL);
 
         /* Fork. */
         pid_t app_pid = fork();
         if (app_pid == 0)
         {
             /* I'm the child. */
+            printf("Profiling:");
+            int i = 0;
+            for (i = 0; i < n_spaces; i++)
+            {
+                printf(" %s", arg[i]);
+            }
+            printf("\n");
             execvp(arg[0], &arg[0]);
+            printf("Fork failure\n");
             return 1;
         }
         /* Wait. */
@@ -258,21 +282,22 @@ int main(int argc, char**argv)
         take_measurement();
         end = now_ms();
 
-        asprintf(&fname, "%s.power.summary", hostname);
+        /* Output summary data. */
+        asprintf(&fname_summary, "%s.power.summary", hostname);
 
-        logfd = open(fname, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
+        logfd = open(fname_summary, O_WRONLY|O_CREAT|O_EXCL|O_NOATIME|O_NDELAY, S_IRUSR|S_IWUSR);
         if (logfd < 0)
         {
-            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s cannot open the appropriate fd for %s -- %s.\n", argv[0], hostname, fname_summary, strerror(errno));
             return 1;
         }
         summaryfile = fdopen(logfd, "w");
         if (summaryfile == NULL)
         {
-            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname, strerror(errno));
+            fprintf(stderr, "Fatal Error: %s on %s fdopen failed for %s -- %s.\n", argv[0], hostname, fname_summary, strerror(errno));
             return 1;
         }
-        /* Output summary data. */
+
         char *msg;
         //asprintf(&msg, "host: %s\npid: %d\ntotal: %lf\nallocated: %lf\nmax_watts: %lf\nmin_watts: %lf\nruntime ms: %lu\n,start: %lu\nend: %lu\n", hostname, app_pid, total_joules, limit_joules, max_watts, min_watts, end-start, start, end);
         asprintf(&msg, "host: %s\npid: %d\nruntime ms: %lu\nstart: %lu\nend: %lu\n", hostname, app_pid, end-start, start, end);
@@ -280,8 +305,11 @@ int main(int argc, char**argv)
         fprintf(summaryfile, "%s", msg);
         fclose(summaryfile);
         close(logfd);
+
         shmctl(shmid, IPC_RMID, NULL);
         shmdt(shmseg);
+
+        pthread_attr_destroy(&mattr);
     }
     else
     {
@@ -291,6 +319,7 @@ int main(int argc, char**argv)
         {
             /* I'm the child. */
             execvp(arg[0], &arg[0]);
+            printf("Fork failure: %s\n", argv[1]);
             return 1;
         }
         /* Wait. */
@@ -299,6 +328,9 @@ int main(int argc, char**argv)
         highlander_wait();
     }
 
+    printf("Output Files\n"
+           "  %s\n"
+           "  %s\n\n", fname_dat, fname_summary);
     highlander_clean();
     return 0;
 }
