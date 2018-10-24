@@ -149,10 +149,10 @@ int enable_turbo(void);
 ///// @return Error code.
 int disable_turbo(void);
 
-int monitoring(FILE *outfile,
-               int sampleTime,
-               int interval,
-               int continuous);
+int pmon_monitoring(FILE *outfile,
+                    int sampleTime,
+                    int interval,
+                    int continuous);
 
 int aperf_monitoring(FILE *outfile,
                      int sampleTime);

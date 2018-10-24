@@ -295,7 +295,7 @@ int fm_06_4f_aperf_monitor(FILE *fd, int sampleLength)
 //    return 0;
 //}
 
-int fm_06_4f_monitoring(FILE *outfile, int sampleLength, int interval, int doSleep)
+int fm_06_4f_pmon_monitoring(FILE *outfile, int sampleLength, int interval, int doSleep)
 {
     static int init = 0;
 

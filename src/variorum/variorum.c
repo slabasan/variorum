@@ -431,7 +431,7 @@ int aperf_monitoring(FILE *outfile, int sampleTime)
     return err;
 }
 
-int monitoring(FILE *outfile, int sampleTime, int interval, int continuous)
+int pmon_monitoring(FILE *outfile, int sampleTime, int interval, int continuous)
 {
     int err = 0;
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
@@ -439,7 +439,7 @@ int monitoring(FILE *outfile, int sampleTime, int interval, int continuous)
     {
         return -1;
     }
-    err = g_platform.monitoring(outfile, sampleTime, interval, continuous);
+    err = g_platform.pmon_monitoring(outfile, sampleTime, interval, continuous);
     if (err)
     {
         return -1;

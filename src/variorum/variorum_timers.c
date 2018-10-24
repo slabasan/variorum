@@ -4,7 +4,7 @@
 #include <variorum_timers.h>
 
 unsigned long now_ms(void)
-{   
+{
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
     unsigned long sec = t.tv_sec * 1000;
@@ -12,21 +12,21 @@ unsigned long now_ms(void)
     return sec + msec;
 }
 
-int timer_sleep(struct mstimer *t) 
+int timer_sleep(struct mstimer *t)
 {
     unsigned long now = now_ms();
     if (now >= t->nextms)
-    {   
+    {
         int cadd = 0;
         while (t->nextms <= now)
-        {   
+        {
             cadd++;
             t->step++;
             t->nextms = t->startms + t->step * t->interval;
-        }   
+        }
         /* We slept this many intervals. */
         return cadd;
-    }   
+    }
     sleep_ms(t->nextms - now);
     t->step++;
     t->nextms = t->startms + t->step * t->interval;
@@ -42,7 +42,7 @@ void init_msTimer(struct mstimer *t, int ms_interval)
 }
 
 void sleep_ms(long ms)
-{   
+{
     struct timeval i;
     i.tv_sec = ms / 1000;
     i.tv_usec = (ms%1000) * 1000;

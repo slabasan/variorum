@@ -1,7 +1,7 @@
 // Program to monitor performance of a running application and make adjustments
 // to RAPL. Runs on a dedicated core
 //
-// Author: Tiffany A. Connors 
+// Author: Tiffany A. Connors
 
 #define _GNU_SOURCE
 
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
         //{
         //    break;
         //}
-        
+
         switch(c)
         {
         case 'h':
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
         case 't':
             sampleLength = (int)strtol(optarg, NULL, 10);
             if (sampleLength < 1)
-            { 
+            {
                 printf("Error: sample time must be atleast 1\n");
                 exit(0);
             }
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
         printf("Error: --interval and --time required\n");
         exit(0);
     }
-     
+
     /* Log file. */
     char hostname[64];
     gethostname(hostname,64);
@@ -112,10 +112,10 @@ int main(int argc, char **argv)
         fprintf(stderr, "Can't open output file %s!\n", fname);
         exit(1);
     }
- 
+
     if (!turbo)
     {
-        disable_turbo(); 
+        disable_turbo();
     }
     else
     {
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
         set_each_socket_power_limit_tw(130, timewindow);
         dump_power_limits();
     }
-    monitoring(fd, sampleLength, interval, continuous);  
+    pmon_monitoring(fd, sampleLength, interval, continuous);
 
     fclose(fd);
     return 0;

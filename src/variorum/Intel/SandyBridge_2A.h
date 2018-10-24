@@ -92,9 +92,9 @@ int fm_06_2a_disable_turbo(void);
 
 int fm_06_2a_get_turbo_status(void);
 
-int fm_06_2a_monitoring(FILE *outfile,
-                        int sampleLength,
-                        int interval,
-                        int continuous);
+int fm_06_2a_pmon_monitoring(FILE *outfile,
+                             int sampleLength,
+                             int interval,
+                             int continuous);
 
 #endif

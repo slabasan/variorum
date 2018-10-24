@@ -92,10 +92,10 @@ int fm_06_4f_disable_turbo(void);
 
 int fm_06_4f_get_turbo_status(void);
 
-int fm_06_4f_monitoring(FILE *outfile,
-                        int seconds,
-                        int interval,
-                        int doSleep);
+int fm_06_4f_pmon_monitoring(FILE *outfile,
+                             int seconds,
+                             int interval,
+                             int doSleep);
 
 int fm_06_4f_aperf_monitor(FILE *fd,
                            int sampleLength);

@@ -276,7 +276,7 @@ int fm_06_3f_set_pkg_pwr_lim(int package_power_limit, double time_window)
     return 0;
 }
 
-int fm_06_3f_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
+int fm_06_3f_pmon_monitoring(FILE *outfile, int sampleLength, int interval, int continuous)
 {
     static int init = 0;
 
