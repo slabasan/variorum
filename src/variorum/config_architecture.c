@@ -67,6 +67,8 @@ int variorum_exit(const char *filename, const char *func_name, int line_num)
     free(g_platform.ibm_arch);
 #elif VARIORUM_WITH_GPU
     free(g_platform.gpu_arch);
+#elif VARIORUM_WITH_ARM
+    free(g_platform.arm_arch);
 #endif
 
     return err;
@@ -82,6 +84,8 @@ int variorum_detect_arch(void)
     //g_platform.amd_arch = detect_ibm_arch();
 #elif VARIORUM_WITH_GPU
     //g_platform.amd_arch = detect_gpu_arch();
+#elif VARIORUM_WITH_ARM
+    //g_platform.arm_arch = detect_arm_arch();
 #else
     return VARIORUM_ERROR_UNSUPPORTED_ARCH;
 #endif

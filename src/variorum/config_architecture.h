@@ -54,6 +54,12 @@ enum intel_arch_e
     FM_06_57 = 87   // Knights Landing
 };
 
+/// @brief List of Arm family and models.
+enum arm_arch_e
+{
+    JUNO,
+};
+
 /// @brief Mapping topology information.
 struct map
 {
@@ -151,6 +157,8 @@ struct platform
     uint64_t *ibm_arch;
     /// @brief Identifier for GPU architecture.
     uint64_t *gpu_arch;
+    /// @brief Identifier for Arm architecture.
+    uint64_t *arm_arch;
 
     /// @brief Hostname.
     char hostname[1024];

@@ -1,23 +1,41 @@
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/variorum_config.h.in"
                "${CMAKE_CURRENT_SOURCE_DIR}/variorum_config.h")
 
-set(variorum_headers
-  config_architecture.h
-  msr_core.h
-  variorum.h
-  variorum_timers.h
-  variorum_cpuid.h
-  variorum_error.h
-  )
+if(VARIORUM_WITH_INTEL)
+    set(variorum_headers
+      config_architecture.h
+      msr_core.h
+      variorum.h
+      variorum_timers.h
+      variorum_cpuid.h
+      variorum_error.h
+      )
 
-set(variorum_sources
-  config_architecture.c
-  msr_core.c
-  variorum.c
-  variorum_timers.c
-  variorum_cpuid.c
-  variorum_error.c
-  )
+    set(variorum_sources
+      config_architecture.c
+      msr_core.c
+      variorum.c
+      variorum_timers.c
+      variorum_cpuid.c
+      variorum_error.c
+      )
+elseif(VARIORUM_WITH_ARM)
+    set(variorum_headers
+      config_architecture.h
+      msr_core.h
+      variorum.h
+      variorum_timers.h
+      variorum_error.h
+      )
+
+    set(variorum_sources
+      config_architecture.c
+      msr_core.c
+      variorum.c
+      variorum_timers.c
+      variorum_error.c
+    )
+endif()
 
 set(variorum_deps ""
     CACHE INTERNAL ""
@@ -34,6 +52,12 @@ if(VARIORUM_WITH_INTEL)
     list(APPEND variorum_sources Intel/config_intel.c)
     list(APPEND variorum_deps $<TARGET_OBJECTS:variorum_intel>)
     list(APPEND variorum_includes ${CMAKE_CURRENT_SOURCE_DIR}/Intel)
+elseif(VARIORUM_WITH_ARM)
+    add_subdirectory(Arm)
+    list(APPEND variorum_headers Arm/config_arm.h ${variorum_arm_headers})
+    list(APPEND variorum_sources Arm/config_arm.c)
+    list(APPEND variorum_deps $<TARGET_OBJECTS:variorum_arm>)
+    list(APPEND variorum_includes ${CMAKE_CURRENT_SOURCE_DIR}/Arm)
 endif()
 
 if(BUILD_SHARED_LIBS)
