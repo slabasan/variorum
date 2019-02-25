@@ -118,6 +118,7 @@ int set_intel_func_ptrs(void)
         //g_platform.disable_turbo = fm_06_55_disable_turbo;
         g_platform.poll_power = fm_06_55_poll_power;
         g_platform.monitoring = fm_06_55_monitoring;
+        g_platform.dump_available_frequencies = fm_06_55_get_frequencies;
     }
     // Kaby Lake 06_9E
     else if (*g_platform.intel_arch == FM_06_9E)

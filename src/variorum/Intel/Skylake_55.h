@@ -92,4 +92,6 @@ int fm_06_55_poll_power(FILE *output);
 
 int fm_06_55_monitoring(FILE *output);
 
+int fm_06_55_get_frequencies(void);
+
 #endif

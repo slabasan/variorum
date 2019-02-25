@@ -333,3 +333,8 @@ void print_clocks_data_core(FILE *writedest, off_t msr_aperf, off_t msr_mperf, o
 //    write_msr_by_coord(socket, core, 0, IA32_CLOCK_MODULATION, msrVal);
 //    return 0;
 //}
+
+void get_available_frequencies(FILE *writedest)
+{
+    printf("Not implemented.\n");
+}
