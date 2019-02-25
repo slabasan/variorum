@@ -44,6 +44,8 @@ int set_each_socket_power_limit(int socket_power_limit);
 ///// @return Error code.
 //int set_each_gpu_power_limit(int gpu_power_limit);
 
+//int set_each_core_frequency(int cpu_freq); // Barry suggests adding max
+
 /************************/
 /* Print/Dump Functions */
 /************************/
@@ -151,8 +153,13 @@ int enable_turbo(void);
 /// @return Error code.
 int disable_turbo(void);
 
+/// @brief List out available frequencies from p-states, turbo, AVX, etc. ranges.
+///
+/// @return Error code.
+int dump_available_frequencies(void);
+
 ///* Do we need these? */
 //int dump_cap_package_frequency(void);
-//int dump_available_frequencies(void);
+
 
 #endif

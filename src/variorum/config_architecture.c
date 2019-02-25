@@ -192,6 +192,7 @@ void variorum_init_func_ptrs()
     g_platform.enable_turbo = NULL;
     g_platform.disable_turbo = NULL;
     g_platform.dump_turbo = NULL;
+    g_platform.dump_available_frequencies = NULL;
 }
 
 int variorum_set_func_ptrs()

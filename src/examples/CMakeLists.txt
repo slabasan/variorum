@@ -21,6 +21,7 @@ set(BASIC_EXAMPLES
   ex-poll-power-to-file
   ex-poll-power-to-stdout
   ex-monitoring-to-file
+  ex-dump-available-frequencies
 )
 
 foreach(EXAMPLE ${BASIC_EXAMPLES})

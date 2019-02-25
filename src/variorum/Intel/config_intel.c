@@ -31,6 +31,10 @@ uint64_t *detect_intel_arch(void)
     //return (((rax >> 28) & 0x0F)+((rax >> 8) & 0x0F) << 8) | ((rax >> 12) & 0xF0)+((rax >> 4) & 0xF);
 }
 
+/* 02/25/2019 SB
+ *    If implementation is identical, have function pointer use the same function.
+ *    If it is different, implement a new function.
+ */
 int set_intel_func_ptrs(void)
 {
     int err = 0;

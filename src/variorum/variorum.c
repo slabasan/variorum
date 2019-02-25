@@ -523,3 +523,29 @@ int disable_turbo(void)
 	}
 	return err;
 }
+
+int dump_available_frequencies(void)
+{
+    int err = 0;
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+//    if (g_platform.dump_available_frequencies == NULL)
+//    {
+//        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+//        return -1;
+//    }
+//    err = g_platform.dump_available_frequencies();
+    if (err)
+    {
+        return -1;
+    }
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
