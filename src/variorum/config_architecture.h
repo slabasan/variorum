@@ -142,6 +142,11 @@ struct platform
     /// @return Error code.
     int (*dump_turbo)(void);
 
+    /// @brief Function pointer to get list of available frequencies.
+    ///
+    /// @return Error code.
+    int (*dump_available_frequencies)(void);
+
     /******************************/
     /* Platform-Specific Topology */
     /******************************/
