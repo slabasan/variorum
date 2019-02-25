@@ -94,4 +94,6 @@ int fm_06_55_monitoring(FILE *output);
 
 int fm_06_55_set_frequency(int core_freq_mhz);
 
+int fm_06_55_get_frequencies(void);
+
 #endif

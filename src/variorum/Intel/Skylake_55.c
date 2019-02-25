@@ -277,3 +277,16 @@ int fm_06_55_set_frequency(int core_freq_mhz)
     set_p_state(core_freq_mhz, CORE, msrs.ia32_perf_status, msrs.ia32_perf_ctl);
     return 0;
 }
+
+int fm_06_55_get_frequencies(void)
+{
+    int nsockets, ncores, nthreads;
+    variorum_set_topology(&nsockets, &ncores, &nthreads);
+
+#ifdef VARIORUM_LOG
+    printf("Running %s\n", __FUNCTION__);
+#endif
+
+    get_available_frequencies(stdout);
+    return 0;
+}

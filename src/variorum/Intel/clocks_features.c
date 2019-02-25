@@ -407,3 +407,8 @@ void set_p_state(int cpu_freq_mhz, enum ctl_domains_e domain, off_t msr_perf_sta
 //    write_msr_by_coord(socket, core, 0, IA32_CLOCK_MODULATION, msrVal);
 //    return 0;
 //}
+
+void get_available_frequencies(FILE *writedest)
+{
+    printf("Not implemented.\n");
+}
