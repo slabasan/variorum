@@ -18,8 +18,7 @@ static struct skylake_55_offsets msrs =
     .ia32_misc_enable             = 0x1A0,
     .msr_temperature_target       = 0x1A2,
     .msr_turbo_ratio_limit        = 0x1AD,
-    .msr_turbo_ratio_limit1       = 0x1AE,
-    .msr_turbo_ratio_limit2       = 0x1AF,
+    .msr_turbo_ratio_limit_cores  = 0x1AE,
     .ia32_package_therm_status    = 0x1B1,
     .ia32_package_therm_interrupt = 0x1B2,
     .ia32_fixed_counters[0]       = 0x309,
@@ -136,8 +135,7 @@ int fm_06_55_get_features(void)
     fprintf(stdout, "ia32_misc_enable             = 0x%lx\n", msrs.ia32_misc_enable);
     fprintf(stdout, "msr_temperature_target       = 0x%lx\n", msrs.msr_temperature_target);
     fprintf(stdout, "msr_turbo_ratio_limit        = 0x%lx\n", msrs.msr_turbo_ratio_limit);
-    fprintf(stdout, "msr_turbo_ratio_limit1       = 0x%lx\n", msrs.msr_turbo_ratio_limit1);
-    fprintf(stdout, "msr_turbo_ratio_limit2       = 0x%lx\n", msrs.msr_turbo_ratio_limit2);
+    fprintf(stdout, "msr_turbo_ratio_limit_cores  = 0x%lx\n", msrs.msr_turbo_ratio_limit_cores);
     fprintf(stdout, "ia32_package_therm_status    = 0x%lx\n", msrs.ia32_package_therm_status);
     fprintf(stdout, "ia32_package_therm_interrupt = 0x%lx\n", msrs.ia32_package_therm_interrupt);
     fprintf(stdout, "ia32_fixed_counters[0]       = 0x%lx\n", msrs.ia32_fixed_counters[0]);
@@ -271,5 +269,6 @@ int fm_06_55_get_frequencies(void)
     printf("Running %s\n", __FUNCTION__);
 #endif
 
-    get_available_frequencies(stdout);
+    get_available_frequencies(stdout, msrs.msr_platform_info, msrs.msr_turbo_ratio_limit, msrs.msr_turbo_ratio_limit_cores);
+    return 0;
 }

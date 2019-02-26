@@ -82,6 +82,10 @@ enum libmsr_data_type_e
     /// @brief User-defined batch MSR data.
     USR_BATCH10 = 28,
     PLATFORM_INFO = 29,
+    MIN_OPERATING_RATIO = 30,
+    MAX_EFFICIENCY = 31,
+    TURBO_RATIO_LIMITS = 32,
+    TURBO_RATIO_LIMITS_CORES = 33,
 };
 
 /// @brief Enum encompassing batch operations.

@@ -334,7 +334,26 @@ void print_clocks_data_core(FILE *writedest, off_t msr_aperf, off_t msr_mperf, o
 //    return 0;
 //}
 
-void get_available_frequencies(FILE *writedest)
+void get_available_frequencies(FILE *writedest, off_t msr_platform_info, off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_limit_cores)
 {
-    printf("Not implemented.\n");
+    /* P-State Table -- P1, Pn, and Pm
+     * Read IA32_PLATFORM_INFO 0xCE
+     * Field "Maximum Efficiency Ratio: Bits 47:40 == Pn
+     * Field "Maximum Non-Turbo Ratio: Bits 15:8 == P1
+     * Field "Minimum Operating Ratio: Bits 55:48 == Pm
+     */
+    fprintf(writedest, "=== P-State Table ===\n");
+    get_max_efficiency_ratio(msr_platform_info);
+    fprintf(writedest, "P1: %d MHz\n", get_max_non_turbo_ratio(msr_platform_info));
+    get_min_operating_ratio(msr_platform_info);
+
+    /* Turbo Range
+     * Default ratio for 1C Max Turbo == P01
+     * All core turbo == P0n
+     * MSR_TURBO_RATIO_LIMIT_CORES for Skylake (1AEh)
+     */
+    fprintf(writedest, "=== Turbo Schedule ===\n");
+    get_turbo_ratio_limits(msr_turbo_ratio_limit, msr_turbo_ratio_limit_cores);
+
+    /* AVX2, AVX512 (i.e., AVX3) */
 }
