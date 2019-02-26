@@ -70,6 +70,9 @@ struct skylake_55_offsets
     off_t ia32_perfevtsel_counters[8];
     /// @brief Array of unique addresses for pmon evtsel.
     off_t msrs_pcu_pmon_evtsel[4];
+    const off_t msr_config_tdp_level1;
+    const off_t msr_config_tdp_level2;
+    const off_t msr_config_tdp_nominal;
 };
 
 int fm_06_55_get_power_limits(int long_ver);

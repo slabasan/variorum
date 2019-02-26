@@ -408,7 +408,7 @@ void set_p_state(int cpu_freq_mhz, enum ctl_domains_e domain, off_t msr_perf_sta
 //    return 0;
 //}
 
-void get_available_frequencies(FILE *writedest, off_t msr_platform_info, off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_limit_cores)
+void get_available_frequencies(FILE *writedest, off_t msr_platform_info, off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_limit_cores, off_t msr_config_tdp_l1, off_t msr_config_tdp_l2, off_t msr_config_tdp_nominal)
 {
     /* P-State Table -- P1, Pn, and Pm
      * Read IA32_PLATFORM_INFO 0xCE
@@ -431,5 +431,9 @@ void get_available_frequencies(FILE *writedest, off_t msr_platform_info, off_t m
     fprintf(writedest, "=== Turbo Schedule ===\n");
     get_turbo_ratio_limits(msr_turbo_ratio_limit, msr_turbo_ratio_limit_cores);
 
+    fprintf(writedest, "\n");
+
     /* AVX2, AVX512 (i.e., AVX3) */
+    fprintf(writedest, "=== AVX Schedule ===\n");
+    get_avx_limits(msr_platform_info, msr_config_tdp_l1, msr_config_tdp_l2, msr_config_tdp_nominal);
 }
