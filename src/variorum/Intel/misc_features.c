@@ -6,6 +6,12 @@
 #include <msr_core.h>
 #include <variorum_error.h>
 
+/* 02/25/19 SB
+ * This format will be used moving forward for Xeon 
+ * I am currently batching the read of the turbo ratio limit, which is per
+ * socket. Should we be? May be too much overhead. Is it necessary to read off
+ * both sockets?"
+ */
 int get_max_non_turbo_ratio(off_t msr_platform_info)
 {
     static int init = 0;
@@ -36,6 +42,12 @@ int get_max_non_turbo_ratio(off_t msr_platform_info)
     return max_non_turbo_ratio * 100;
 }
 
+/* 02/25/19 SB
+ * This format will be used moving forward for Xeon 
+ * I am currently batching the read of the turbo ratio limit, which is per
+ * socket. Should we be? May be too much overhead. Is it necessary to read off
+ * both sockets?"
+ */
 int get_max_efficiency_ratio(off_t msr_platform_info)
 {
     static int init = 0;
@@ -64,6 +76,12 @@ int get_max_efficiency_ratio(off_t msr_platform_info)
     return max_efficiency_ratio * 100;
 }
 
+/* 02/25/19 SB
+ * This format will be used moving forward for Xeon 
+ * I am currently batching the read of the turbo ratio limit, which is per
+ * socket. Should we be? May be too much overhead. Is it necessary to read off
+ * both sockets?"
+ */
 int get_min_operating_ratio(off_t msr_platform_info)
 {
     static int init = 0;
@@ -92,14 +110,19 @@ int get_min_operating_ratio(off_t msr_platform_info)
     return min_operating_ratio * 100;
 }
 
-/* This format will be used moving forward */
+/* 02/25/19 SB
+ * This format will be used moving forward for Xeon 
+ * I am currently batching the read of the turbo ratio limit, which is per
+ * socket. Should we be? May be too much overhead. Is it necessary to read off
+ * both sockets?"
+ */
 int get_turbo_ratio_limits(off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_limit_cores)
 {
     static int init = 0;
     static int nsockets = 0;
     static uint64_t **val = NULL;
     static uint64_t **val2 = NULL;
-    int socket;
+    int socket, nbits;
 
     variorum_set_topology(&nsockets, NULL, NULL);
     if (!init)
@@ -118,8 +141,12 @@ int get_turbo_ratio_limits(off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_li
 
     for (socket = 0; socket < nsockets; socket++)
     {
-        printf("Socket %d val = %d\n", socket, *val[socket]);
-        printf("Socket %d val2 = %d\n", socket, *val2[socket]);
+        for (nbits = 0; nbits < 56; nbits+=8)
+        {
+            printf("Socket %d nactivecores = %d turbofreq = %d MHz\n", socket,
+                   (int)(MASK_VAL(*val2[socket], nbits+7, nbits)),
+                   (int)(MASK_VAL(*val[socket], nbits+7, nbits))*100);
+        }
     }
 }
 

@@ -421,6 +421,8 @@ void get_available_frequencies(FILE *writedest, off_t msr_platform_info, off_t m
     fprintf(writedest, "P1: %d MHz\n", get_max_non_turbo_ratio(msr_platform_info));
     get_min_operating_ratio(msr_platform_info);
 
+    fprintf(writedest, "\n");
+
     /* Turbo Range
      * Default ratio for 1C Max Turbo == P01
      * All core turbo == P0n
