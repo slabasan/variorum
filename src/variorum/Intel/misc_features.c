@@ -36,6 +36,93 @@ int get_max_non_turbo_ratio(off_t msr_platform_info)
     return max_non_turbo_ratio * 100;
 }
 
+int get_max_efficiency_ratio(off_t msr_platform_info)
+{
+    static int init = 0;
+    static int nsockets = 0;
+    static uint64_t **val = NULL;
+    int max_efficiency_ratio;
+    int socket;
+
+    variorum_set_topology(&nsockets, NULL, NULL);
+    if (!init)
+    {
+        val = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+        allocate_batch(MAX_EFFICIENCY, nsockets);
+        load_socket_batch(msr_platform_info, val, MAX_EFFICIENCY);
+        init = 1;
+    }
+
+	read_batch(MAX_EFFICIENCY);
+
+    for (socket = 0; socket < nsockets; socket++)
+    {
+        max_efficiency_ratio = (int)(MASK_VAL(*val[socket], 47, 40));
+        printf("Max Efficiency Ratio: Socket %d Ratio %d MHz\n", socket, max_efficiency_ratio*100);
+    }
+    /// 100 MHz multiplier
+    return max_efficiency_ratio * 100;
+}
+
+int get_min_operating_ratio(off_t msr_platform_info)
+{
+    static int init = 0;
+    static int nsockets = 0;
+    static uint64_t **val = NULL;
+    int min_operating_ratio;
+    int socket;
+
+    variorum_set_topology(&nsockets, NULL, NULL);
+    if (!init)
+    {
+        val = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+        allocate_batch(MIN_OPERATING_RATIO, nsockets);
+        load_socket_batch(msr_platform_info, val, MIN_OPERATING_RATIO);
+        init = 1;
+    }
+
+	read_batch(MIN_OPERATING_RATIO);
+
+    for (socket = 0; socket < nsockets; socket++)
+    {
+        min_operating_ratio = (int)(MASK_VAL(*val[socket], 55, 48));
+        printf("Min Operating Ratio: Socket %d Ratio %d MHz\n", socket, min_operating_ratio*100);
+    }
+    /// 100 MHz multiplier
+    return min_operating_ratio * 100;
+}
+
+/* This format will be used moving forward */
+int get_turbo_ratio_limits(off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_limit_cores)
+{
+    static int init = 0;
+    static int nsockets = 0;
+    static uint64_t **val = NULL;
+    static uint64_t **val2 = NULL;
+    int socket;
+
+    variorum_set_topology(&nsockets, NULL, NULL);
+    if (!init)
+    {
+        val = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+        val2 = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+        allocate_batch(TURBO_RATIO_LIMITS, nsockets);
+        allocate_batch(TURBO_RATIO_LIMITS_CORES, nsockets);
+        load_socket_batch(msr_turbo_ratio_limit, val, TURBO_RATIO_LIMITS);
+        load_socket_batch(msr_turbo_ratio_limit_cores, val2, TURBO_RATIO_LIMITS_CORES);
+        init = 1;
+    }
+
+	read_batch(TURBO_RATIO_LIMITS);
+	read_batch(TURBO_RATIO_LIMITS_CORES);
+
+    for (socket = 0; socket < nsockets; socket++)
+    {
+        printf("Socket %d val = %d\n", socket, *val[socket]);
+        printf("Socket %d val2 = %d\n", socket, *val2[socket]);
+    }
+}
+
 /// For socket level
 int set_turbo_on(off_t msr_misc_enable, unsigned int turbo_mode_disable_bit)
 {

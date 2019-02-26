@@ -112,7 +112,10 @@ void print_clocks_data(FILE *writedest,
                        off_t msr_platform_info,
                        enum ctl_domains_e control_domain);
 
-void get_available_frequencies(FILE *writedest);
+void get_available_frequencies(FILE *writedest,
+                               off_t msr_platform_info,
+                               off_t msr_turbo_ratio_limit,
+                               off_t msr_turbo_ratio_limit_cores);
 
 ///// @brief Print current p-state.
 /////

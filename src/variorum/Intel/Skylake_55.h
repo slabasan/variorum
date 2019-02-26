@@ -27,9 +27,7 @@ struct skylake_55_offsets
     /// @brief Address for TURBO_RATIO_LIMIT.
     const off_t msr_turbo_ratio_limit;
     /// @brief Address for TURBO_RATIO_LIMIT1.
-    const off_t msr_turbo_ratio_limit1;
-    /// @brief Address for TURBO_RATIO_LIMIT2.
-    const off_t msr_turbo_ratio_limit2;
+    const off_t msr_turbo_ratio_limit_cores;
     /// @brief Address for IA32_PACKAGE_THERM_STATUS.
     const off_t ia32_package_therm_status;
     /// @brief Address for IA32_PACKAGE_THERM_INTERRUPT.
