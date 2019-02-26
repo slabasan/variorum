@@ -7,7 +7,7 @@
 #include <variorum_error.h>
 
 /* 02/25/19 SB
- * This format will be used moving forward for Xeon 
+ * This format will be used moving forward for Xeon
  * I am currently batching the read of the turbo ratio limit, which is per
  * socket. Should we be? May be too much overhead. Is it necessary to read off
  * both sockets?"
@@ -43,7 +43,7 @@ int get_max_non_turbo_ratio(off_t msr_platform_info)
 }
 
 /* 02/25/19 SB
- * This format will be used moving forward for Xeon 
+ * This format will be used moving forward for Xeon
  * I am currently batching the read of the turbo ratio limit, which is per
  * socket. Should we be? May be too much overhead. Is it necessary to read off
  * both sockets?"
@@ -77,7 +77,7 @@ int get_max_efficiency_ratio(off_t msr_platform_info)
 }
 
 /* 02/25/19 SB
- * This format will be used moving forward for Xeon 
+ * This format will be used moving forward for Xeon
  * I am currently batching the read of the turbo ratio limit, which is per
  * socket. Should we be? May be too much overhead. Is it necessary to read off
  * both sockets?"
@@ -111,7 +111,7 @@ int get_min_operating_ratio(off_t msr_platform_info)
 }
 
 /* 02/25/19 SB
- * This format will be used moving forward for Xeon 
+ * This format will be used moving forward for Xeon
  * I am currently batching the read of the turbo ratio limit, which is per
  * socket. Should we be? May be too much overhead. Is it necessary to read off
  * both sockets?"
@@ -147,6 +147,79 @@ int get_turbo_ratio_limits(off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_li
                    (int)(MASK_VAL(*val2[socket], nbits+7, nbits)),
                    (int)(MASK_VAL(*val[socket], nbits+7, nbits))*100);
         }
+    }
+}
+
+void get_avx_limits(off_t msr_platform_info, off_t msr_config_tdp_l1, off_t msr_config_tdp_l2, off_t msr_config_tdp_nominal)
+{
+    static int init = 0;
+    static int nsockets = 0;
+    static uint64_t **val, **l1, **l2 = NULL;
+    int socket;
+    uint64_t nominal;
+
+    variorum_set_topology(&nsockets, NULL, NULL);
+    if (!init)
+    {
+        val = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+        allocate_batch(TDP_DEFS, nsockets);
+        load_socket_batch(msr_platform_info, val, TDP_DEFS);
+        init = 1;
+    }
+
+    /* P0n
+     * ...
+     * P01
+     * P1
+     * ...
+     * Pn
+     * PAVX2
+     * PAVX512
+     */
+	read_batch(TDP_DEFS);
+
+    int nvalues = (int)(MASK_VAL(*val[0], 34, 33));
+    switch(nvalues)
+    {
+        case 0:
+            // Read 648h = normal P1
+            read_msr_by_coord(0, 0, 0, msr_config_tdp_nominal, &nominal);
+            printf("Nominal P1 = %d MHz\n", (int)(MASK_VAL(nominal, 7, 0))*100);
+            break;
+        case 1:
+            l1 = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+            allocate_batch(TDP_CONFIG_L1, nsockets);
+            load_socket_batch(msr_config_tdp_l1, l1, TDP_CONFIG_L1);
+            read_batch(TDP_CONFIG_L1);
+            printf("AVX512 P1 = %d MHz\n", (int)(MASK_VAL(*l1[0], 23, 16))*100);
+
+            // Read 648h = normal P1
+            read_msr_by_coord(0, 0, 0, msr_config_tdp_nominal, &nominal);
+            printf("Nominal P1 = %d MHz\n", (int)(MASK_VAL(nominal, 7, 0))*100);
+            break;
+        case 2:
+            // Read 649h and 64a
+            l1 = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+            allocate_batch(TDP_CONFIG_L1, nsockets);
+            load_socket_batch(msr_config_tdp_l1, l1, TDP_CONFIG_L1);
+            read_batch(TDP_CONFIG_L1);
+            printf("AVX512 P1 = %d MHz\n", (int)(MASK_VAL(*l1[0], 23, 16))*100);
+
+            l2 = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+            allocate_batch(TDP_CONFIG_L2, nsockets);
+            load_socket_batch(msr_config_tdp_l2, l2, TDP_CONFIG_L2);
+            read_batch(TDP_CONFIG_L2);
+            printf("AVX2 P1 = %d MHz\n", (int)(MASK_VAL(*l2[0], 23, 16))*100);
+
+            // Read 648h = normal P1
+            read_msr_by_coord(0, 0, 0, msr_config_tdp_nominal, &nominal);
+            printf("Nominal P1 = %d MHz\n", (int)(MASK_VAL(nominal, 7, 0))*100);
+            break;
+        case 3:
+            break;
+        default:
+            printf("This case should not happen.\n");
+            break;
     }
 }
 

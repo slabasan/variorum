@@ -86,6 +86,9 @@ enum libmsr_data_type_e
     MAX_EFFICIENCY = 31,
     TURBO_RATIO_LIMITS = 32,
     TURBO_RATIO_LIMITS_CORES = 33,
+    TDP_DEFS = 34,
+    TDP_CONFIG_L1,
+    TDP_CONFIG_L2, 
 };
 
 /// @brief Enum encompassing batch operations.
