@@ -73,7 +73,7 @@ int dump_power_limits(void)
     }
     if (g_platform.dump_power_limits == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_power_limits(0);
@@ -99,7 +99,7 @@ int print_power_limits(void)
     }
     if (g_platform.dump_power_limits == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_power_limits(1);
@@ -169,7 +169,7 @@ int set_each_socket_power_limit(int socket_power_limit)
     }
     if (g_platform.set_each_socket_power_limit == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.set_each_socket_power_limit(socket_power_limit);
@@ -195,7 +195,7 @@ int print_features(void)
     }
     if (g_platform.print_features == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.print_features();
@@ -221,7 +221,7 @@ int dump_thermals(void)
     }
     if (g_platform.dump_thermals == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_thermals(0);
@@ -247,7 +247,7 @@ int print_thermals(void)
     }
     if (g_platform.dump_thermals == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_thermals(1);
@@ -273,7 +273,7 @@ int dump_counters(void)
     }
     if (g_platform.dump_counters == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_counters(0);
@@ -299,7 +299,7 @@ int print_counters(void)
     }
     if (g_platform.dump_counters == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_counters(1);
@@ -325,7 +325,7 @@ int dump_clock_speed(void)
     }
     if (g_platform.dump_clocks == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_clocks(0);
@@ -351,7 +351,7 @@ int print_clock_speed(void)
     }
     if (g_platform.dump_clocks == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_clocks(1);
@@ -377,7 +377,7 @@ int dump_power(void)
     }
     if (g_platform.dump_power == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_power(0);
@@ -403,7 +403,7 @@ int print_power(void)
     }
     if (g_platform.dump_power == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_power(1);
@@ -455,7 +455,7 @@ int dump_turbo(void)
     }
     if (g_platform.dump_turbo == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_turbo();
@@ -482,7 +482,7 @@ int enable_turbo(void)
 	}
     if (g_platform.enable_turbo == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
 	err = g_platform.enable_turbo();
@@ -508,7 +508,7 @@ int disable_turbo(void)
 	}
     if (g_platform.disable_turbo == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
 	err = g_platform.disable_turbo();
@@ -534,7 +534,7 @@ int dump_available_frequencies(void)
     }
     if (g_platform.dump_available_frequencies == NULL)
     {
-        variorum_error_handler("Null function pointer", VARIORUM_ERROR_UNINITIALIZED_FUNC_PTR, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+        variorum_error_handler("Feature not implemented or supported", VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
         return -1;
     }
     err = g_platform.dump_available_frequencies();
