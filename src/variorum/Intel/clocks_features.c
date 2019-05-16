@@ -342,7 +342,10 @@ void get_available_frequencies(FILE *writedest, off_t msr_platform_info, off_t m
      * MSR_TURBO_RATIO_LIMIT_CORES for Skylake (1AEh)
      */
     fprintf(writedest, "=== Turbo Schedule ===\n");
-    get_turbo_ratio_limits(msr_turbo_ratio_limit, msr_turbo_ratio_limit_cores);
+    if (get_turbo_ratio_limits(msr_turbo_ratio_limit, msr_turbo_ratio_limit_cores) != 0)
+    {
+        variorum_error_handler("Values do not match across sockets", VARIORUM_ERROR_INVAL, getenv("HOSTNAME"), __FILE__, __FUNCTION__, __LINE__);
+    }
 
     fprintf(writedest, "\n");
 

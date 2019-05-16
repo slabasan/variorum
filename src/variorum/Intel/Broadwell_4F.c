@@ -20,7 +20,10 @@ static struct broadwell_4f_offsets msrs =
     .ia32_misc_enable             = 0x1A0,
     .msr_temperature_target       = 0x1A2,
     .msr_turbo_ratio_limit        = 0x1AD,
-    .msr_turbo_ratio_limit1       = 0x1AE,
+    .msr_turbo_ratio_limit_cores  = 0x1AE,
+    .msr_config_tdp_level1        = 0x649,
+    .msr_config_tdp_level2        = 0x64A,
+    .msr_config_tdp_nominal       = 0x648,
     .ia32_package_therm_status    = 0x1B1,
     .ia32_package_therm_interrupt = 0x1B2,
     .ia32_fixed_counters[0]       = 0x309,
@@ -154,7 +157,7 @@ int fm_06_4f_get_features(void)
     fprintf(stdout, "ia32_misc_enable             = 0x%lx\n", msrs.ia32_misc_enable);
     fprintf(stdout, "msr_temperature_target       = 0x%lx\n", msrs.msr_temperature_target);
     fprintf(stdout, "msr_turbo_ratio_limit        = 0x%lx\n", msrs.msr_turbo_ratio_limit);
-    fprintf(stdout, "msr_turbo_ratio_limit1       = 0x%lx\n", msrs.msr_turbo_ratio_limit1);
+    fprintf(stdout, "msr_turbo_ratio_limit_cores  = 0x%lx\n", msrs.msr_turbo_ratio_limit_cores);
     fprintf(stdout, "ia32_package_therm_status    = 0x%lx\n", msrs.ia32_package_therm_status);
     fprintf(stdout, "ia32_package_therm_interrupt = 0x%lx\n", msrs.ia32_package_therm_interrupt);
     fprintf(stdout, "ia32_fixed_counters[0]       = 0x%lx\n", msrs.ia32_fixed_counters[0]);
@@ -319,5 +322,15 @@ int fm_06_4f_monitoring(FILE *output)
 #endif
 
     get_all_power_data_fixed(output, msrs.msr_pkg_power_limit, msrs.msr_dram_power_limit, msrs.msr_rapl_power_unit, msrs.msr_pkg_energy_status, msrs.msr_dram_energy_status, msrs.ia32_fixed_counters, msrs.ia32_perf_global_ctrl, msrs.ia32_fixed_ctr_ctrl, msrs.ia32_aperf, msrs.ia32_mperf, msrs.ia32_time_stamp_counter);
+    return 0;
+}
+
+int fm_06_4f_get_frequencies(void)
+{
+#ifdef VARIORUM_LOG
+    printf("Running %s\n", __FUNCTION__);
+#endif
+
+    get_available_frequencies(stdout, msrs.msr_platform_info, msrs.msr_turbo_ratio_limit, msrs.msr_turbo_ratio_limit_cores, msrs.msr_config_tdp_level1, msrs.msr_config_tdp_level2, msrs.msr_config_tdp_nominal);
     return 0;
 }
