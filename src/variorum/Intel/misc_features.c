@@ -150,7 +150,7 @@ int get_turbo_ratio_limits(off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_li
     /// Do sockets match?
     if (nsockets != 1)
     {
-        if (val[0] != val[1] || val2[0] != val[1])
+        if (*val[0] != *val[1] || *val2[0] != *val2[1])
         {
             return VARIORUM_ERROR_INVAL;
         }
@@ -175,6 +175,8 @@ int get_turbo_ratio_limits(off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_li
             break;
         }
     }
+
+    return 0;
 }
 
 int config_tdp(int nlevels, off_t msr_config_tdp_level1, off_t msr_config_tdp_level2)

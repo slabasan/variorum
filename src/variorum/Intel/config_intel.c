@@ -106,6 +106,7 @@ int set_intel_func_ptrs(void)
         g_platform.poll_power = fm_06_4f_poll_power;
         g_platform.monitoring = fm_06_4f_monitoring;
         //g_platform.set_each_core_frequency = fm_06_4f_set_frequency;
+        g_platform.dump_available_frequencies = fm_06_4f_get_frequencies;
     }
     // Skylake 06_55
     else if (*g_platform.intel_arch == FM_06_55)
