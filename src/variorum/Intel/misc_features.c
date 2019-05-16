@@ -65,16 +65,20 @@ int get_max_efficiency_ratio(off_t msr_platform_info)
         init = 1;
     }
 
-	read_batch(MAX_EFFICIENCY);
-
-    for (socket = 0; socket < nsockets; socket++)
+    read_batch(MAX_EFFICIENCY);
+    max_efficiency_ratio = (int)(MASK_VAL(*val[0], 47, 40));
+    /// Do sockets match?
+    if (nsockets != 1)
     {
-        max_efficiency_ratio = (int)(MASK_VAL(*val[socket], 47, 40));
-        printf("Max Efficiency Ratio: Socket %d Ratio %d MHz\n", socket, max_efficiency_ratio*100);
+        if (max_efficiency_ratio != (int)(MASK_VAL(*val[1], 47, 40)))
+        {
+            return VARIORUM_ERROR_INVAL;
+        }
     }
     /// 100 MHz multiplier
     return max_efficiency_ratio * 100;
 }
+
 
 /* 02/25/19 SB
  * This format will be used moving forward for Xeon
@@ -99,16 +103,20 @@ int get_min_operating_ratio(off_t msr_platform_info)
         init = 1;
     }
 
-	read_batch(MIN_OPERATING_RATIO);
-
-    for (socket = 0; socket < nsockets; socket++)
+    read_batch(MIN_OPERATING_RATIO);
+    min_operating_ratio = (int)(MASK_VAL(*val[0], 55, 48));
+    /// Do sockets match?
+    if (nsockets != 1)
     {
-        min_operating_ratio = (int)(MASK_VAL(*val[socket], 55, 48));
-        printf("Min Operating Ratio: Socket %d Ratio %d MHz\n", socket, min_operating_ratio*100);
+        if (min_operating_ratio != (int)(MASK_VAL(*val[1], 55, 48)))
+        {
+            return VARIORUM_ERROR_INVAL;
+        }
     }
     /// 100 MHz multiplier
     return min_operating_ratio * 100;
 }
+
 
 /* 02/25/19 SB
  * This format will be used moving forward for Xeon
@@ -122,9 +130,9 @@ int get_turbo_ratio_limits(off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_li
     static int nsockets = 0;
     static uint64_t **val = NULL;
     static uint64_t **val2 = NULL;
-    int socket, nbits;
+    int socket, ncores, nbits;
 
-    variorum_set_topology(&nsockets, NULL, NULL);
+    variorum_set_topology(&nsockets, &ncores, NULL);
     if (!init)
     {
         val = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
@@ -139,15 +147,86 @@ int get_turbo_ratio_limits(off_t msr_turbo_ratio_limit, off_t msr_turbo_ratio_li
 	read_batch(TURBO_RATIO_LIMITS);
 	read_batch(TURBO_RATIO_LIMITS_CORES);
 
-    for (socket = 0; socket < nsockets; socket++)
+    /// Do sockets match?
+    if (nsockets != 1)
     {
-        for (nbits = 0; nbits < 56; nbits+=8)
+        if (val[0] != val[1] || val2[0] != val[1])
         {
-            printf("Socket %d nactivecores = %d turbofreq = %d MHz\n", socket,
-                   (int)(MASK_VAL(*val2[socket], nbits+7, nbits)),
-                   (int)(MASK_VAL(*val[socket], nbits+7, nbits))*100);
+            return VARIORUM_ERROR_INVAL;
         }
     }
+
+    int core = 1;
+    for (nbits = 0; nbits < 64; nbits+=8)
+    {
+        printf("%2dC = %d MHz\n", core, (int)(MASK_VAL(*val[0], nbits+7, nbits))*100);
+        core += 1;
+        if (core > ncores)
+        {
+            break;
+        }
+    }
+    for (nbits = 0; nbits < 64; nbits+=8)
+    {
+        printf("%2dC = %d MHz\n", core, (int)(MASK_VAL(*val2[0], nbits+7, nbits))*100);
+        core += 1;
+        if (core >= ncores)
+        {
+            break;
+        }
+    }
+}
+
+int config_tdp(int nlevels, off_t msr_config_tdp_level1, off_t msr_config_tdp_level2)
+{
+    static int init = 0;
+    static int nsockets = 0;
+    static uint64_t **l1 = NULL;
+    static uint64_t **l2 = NULL;
+    int level1, level2;
+    int socket;
+
+    variorum_set_topology(&nsockets, NULL, NULL);
+    if (!init)
+    {
+        l1 = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+        l2 = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
+        allocate_batch(TDP_CONFIG_L1, nsockets);
+        allocate_batch(TDP_CONFIG_L2, nsockets);
+        load_socket_batch(msr_config_tdp_level1, l1, TDP_CONFIG_L1);
+        load_socket_batch(msr_config_tdp_level2, l2, TDP_CONFIG_L2);
+        init = 1;
+    }
+
+    read_batch(TDP_CONFIG_L1);
+    read_batch(TDP_CONFIG_L2);
+
+    switch(nlevels)
+    {
+        case 2:
+            level2 = (int)(MASK_VAL(*l2[0], 23, 16));
+            if (nsockets != 1)
+            {
+                if (level2 != (int)(MASK_VAL(*l2[1], 23, 16)))
+                {
+                    return VARIORUM_ERROR_INVAL;
+                }
+            }
+            printf("AVX-512 = %d MHz\n", level2 * 100);
+        case 1:
+            level1 = (int)(MASK_VAL(*l1[0], 23, 16));
+            if (nsockets != 1)
+            {
+                if (level1 != (int)(MASK_VAL(*l1[1], 23, 16)))
+                {
+                    return VARIORUM_ERROR_INVAL;
+                }
+            }
+            printf("AVX = %d MHz\n", level1 * 100);
+            break;
+    }
+
+    return 0;
 }
 
 void get_avx_limits(off_t msr_platform_info, off_t msr_config_tdp_l1, off_t msr_config_tdp_l2, off_t msr_config_tdp_nominal)
@@ -183,42 +262,15 @@ void get_avx_limits(off_t msr_platform_info, off_t msr_config_tdp_l1, off_t msr_
     {
         case 0:
             // Read 648h = normal P1
-            read_msr_by_coord(0, 0, 0, msr_config_tdp_nominal, &nominal);
-            printf("Nominal P1 = %d MHz\n", (int)(MASK_VAL(nominal, 7, 0))*100);
+            /// @todo Should we be reading from PLATFORM_INFO or CONFIG_TDP_NOMINAL 0x648?
+            printf("Non-AVX = %d MHz\n", get_max_non_turbo_ratio(msr_platform_info) * 100);
             break;
         case 1:
-            l1 = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
-            allocate_batch(TDP_CONFIG_L1, nsockets);
-            load_socket_batch(msr_config_tdp_l1, l1, TDP_CONFIG_L1);
-            read_batch(TDP_CONFIG_L1);
-            printf("AVX512 P1 = %d MHz\n", (int)(MASK_VAL(*l1[0], 23, 16))*100);
-
-            // Read 648h = normal P1
-            read_msr_by_coord(0, 0, 0, msr_config_tdp_nominal, &nominal);
-            printf("Nominal P1 = %d MHz\n", (int)(MASK_VAL(nominal, 7, 0))*100);
-            break;
         case 2:
-            // Read 649h and 64a
-            l1 = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
-            allocate_batch(TDP_CONFIG_L1, nsockets);
-            load_socket_batch(msr_config_tdp_l1, l1, TDP_CONFIG_L1);
-            read_batch(TDP_CONFIG_L1);
-            printf("AVX512 P1 = %d MHz\n", (int)(MASK_VAL(*l1[0], 23, 16))*100);
-
-            l2 = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
-            allocate_batch(TDP_CONFIG_L2, nsockets);
-            load_socket_batch(msr_config_tdp_l2, l2, TDP_CONFIG_L2);
-            read_batch(TDP_CONFIG_L2);
-            printf("AVX2 P1 = %d MHz\n", (int)(MASK_VAL(*l2[0], 23, 16))*100);
-
-            // Read 648h = normal P1
-            read_msr_by_coord(0, 0, 0, msr_config_tdp_nominal, &nominal);
-            printf("Nominal P1 = %d MHz\n", (int)(MASK_VAL(nominal, 7, 0))*100);
+            config_tdp(nvalues, msr_config_tdp_l1, msr_config_tdp_l2);
             break;
         case 3:
-            break;
-        default:
-            printf("This case should not happen.\n");
+            // Reserved
             break;
     }
 }
