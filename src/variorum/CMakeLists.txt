@@ -1,3 +1,5 @@
+set(VARIORUM_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE STRING "" FORCE )
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/variorum_config.h.in"
                "${CMAKE_CURRENT_SOURCE_DIR}/variorum_config.h")
 
