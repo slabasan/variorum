@@ -1,10 +1,9 @@
 stages:
-  - format
   - build
+  - format
 
-build-quartz-format:
+format-c-cpp-h-quartz:
  tags:
-   - batch
    - quartz
  stage: format
  script:
@@ -17,6 +16,17 @@ build-quartz-format:
    - ./scripts/astyle-format.sh
    - err=$?
    - if [ $err -eq 0 ]; then exit 0; else echo -e "Astyle formatting needed!"; exit 1; fi
+
+format-python-quartz:
+ tags:
+   - quartz
+ stage: format
+ script:
+   - pip install --upgrade -r ./src/utilities/requirements.txt
+   - pip install --upgrade black
+   - echo -e "PWD:" ${PWD}
+   - black --diff --check ./src/utilities
+   - flake8 ./src/utilities
 
 build-quartz:
  tags:
@@ -54,6 +64,7 @@ build-lassen-cpu:
    - cmake -C ${HOST_CONFIG} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install-gitlab-lassen-cpu ../src
    - make VERBOSE=1
    - make install
+   - env CTEST_OUTPUT_ON_FAILURE=1 make test
 
 build-lassen-gpu:
  tags:
@@ -72,3 +83,4 @@ build-lassen-gpu:
    - cmake -C ${HOST_CONFIG} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install-gitlab-lassen-gpu ../src
    - make VERBOSE=1
    - make install
+   - env CTEST_OUTPUT_ON_FAILURE=1 make test
