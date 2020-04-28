@@ -244,7 +244,7 @@ struct platform
 //    void (*set_performance_counters)();
 #endif
 
-struct platform g_platform;
+struct platform g_platform[2];
 
 #ifdef VARIORUM_LOG
 int variorum_enter(const char *filename,
@@ -262,9 +262,10 @@ int variorum_exit(const char *filename,
 int variorum_exit(void);
 #endif
 
-void variorum_get_topology(unsigned *nsockets,
-                           unsigned *ncores,
-                           unsigned *nthreads);
+void variorum_get_topology(int *nsockets,
+                           int *ncores,
+                           int *nthreads,
+                           int idx);
 
 int variorum_set_func_ptrs(void);
 

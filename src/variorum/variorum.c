@@ -38,6 +38,7 @@ static void print_children(hwloc_topology_t topology, hwloc_obj_t obj,
     }
 }
 
+#if 0
 int variorum_tester(void)
 {
     int err = 0;
@@ -732,10 +733,12 @@ int variorum_print_verbose_clock_speed(void)
     }
     return err;
 }
+#endif
 
 int variorum_print_power(void)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -745,18 +748,21 @@ int variorum_print_power(void)
     {
         return -1;
     }
-    if (g_platform.variorum_print_power == NULL)
+    for (i = 0; i < 2; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_power(0);
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].variorum_dump_power == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            return 0;
+        }
+        err = g_platform[i].variorum_dump_power(0);
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -770,6 +776,7 @@ int variorum_print_power(void)
     return err;
 }
 
+#if 0
 int variorum_print_verbose_power(void)
 {
     int err = 0;
@@ -1100,3 +1107,4 @@ int variorum_print_available_frequencies(void)
     }
     return err;
 }
+#endif

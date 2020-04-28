@@ -45,7 +45,8 @@ int variorum_enter()
     variorum_init_func_ptrs();
 
     //Triggers initialization on first call.  Errors assert.
-    variorum_get_topology(NULL, NULL, NULL);
+    variorum_get_topology(NULL, NULL, NULL, 0);
+    variorum_get_topology(NULL, NULL, NULL, 1);
     err = variorum_detect_arch();
     if (err)
     {
@@ -84,17 +85,17 @@ int variorum_exit()
     }
 #endif
 
-#ifdef VARIORUM_WITH_INTEL
-    free(g_platform.intel_arch);
-#endif
-#ifdef VARIORUM_WITH_AMD
-    free(g_platform.amd_arch);
-#endif
+//#ifdef VARIORUM_WITH_INTEL
+//    free(g_platform.intel_arch);
+//#endif
+//#ifdef VARIORUM_WITH_AMD
+//    free(g_platform.amd_arch);
+//#endif
 #ifdef VARIORUM_WITH_IBM
-    free(g_platform.ibm_arch);
+    free(g_platform[0].ibm_arch);
 #endif
 #ifdef VARIORUM_WITH_NVIDIA
-    free(g_platform.nvidia_arch);
+    free(g_platform[1].nvidia_arch);
 #endif
 #ifdef VARIORUM_WITH_ARM
     free(g_platform.arm_arch);
@@ -105,34 +106,31 @@ int variorum_exit()
 
 int variorum_detect_arch(void)
 {
-#ifdef VARIORUM_WITH_INTEL
-    g_platform.intel_arch = detect_intel_arch();
-#endif
+//#ifdef VARIORUM_WITH_INTEL
+//    g_platform.intel_arch = detect_intel_arch();
+//#endif
 #ifdef VARIORUM_WITH_AMD
     //g_platform.amd_arch = detect_amd_arch();
 #endif
 #ifdef VARIORUM_WITH_IBM
-    g_platform.ibm_arch = detect_ibm_arch();
+    g_platform[0].ibm_arch = detect_ibm_arch();
 #endif
 #ifdef VARIORUM_WITH_NVIDIA
-    g_platform.nvidia_arch = detect_gpu_arch();
+    g_platform[1].nvidia_arch = detect_gpu_arch();
 #endif
 #ifdef VARIORUM_WITH_ARM
     g_platform.arm_arch = detect_arm_arch();
 #endif
 
-#if defined(VARIORUM_LOG) && defined(VARIORUM_WITH_INTEL)
-    printf("Intel Model: 0x%lx\n", *g_platform.intel_arch);
-#endif
+//#if defined(VARIORUM_LOG) && defined(VARIORUM_WITH_INTEL)
+//    printf("Intel Model: 0x%lx\n", *g_platform.intel_arch);
+//#endif
 #if defined(VARIORUM_LOG) && defined(VARIORUM_WITH_IBM)
-    printf("IBM Model: 0x%lx\n", *g_platform.ibm_arch);
+    printf("IBM Model: 0x%lx\n", *g_platform[0].ibm_arch);
 #endif
 
-    if (g_platform.intel_arch   == NULL &&
-        g_platform.amd_arch     == NULL &&
-        g_platform.ibm_arch     == NULL &&
-        g_platform.nvidia_arch  == NULL &&
-        g_platform.arm_arch     == NULL)
+    if (g_platform[0].ibm_arch     == NULL &&
+        g_platform[1].nvidia_arch  == NULL)
     {
         variorum_error_handler("No architectures detected", VARIORUM_ERROR_RUNTIME,
                                getenv("HOSTNAME"), __FILE__, __FUNCTION__,
@@ -144,18 +142,17 @@ int variorum_detect_arch(void)
 }
 
 
-void variorum_get_topology(unsigned *nsockets, unsigned *ncores,
-                           unsigned *nthreads)
+void variorum_get_topology(int *nsockets, int *ncores, int *nthreads, int idx)
 {
     hwloc_topology_t topology;
     int rc;
     static int init_variorum_get_topology = 0;
 
-    gethostname(g_platform.hostname, 1024);
+    gethostname(g_platform[idx].hostname, 1024);
 
     if (!init_variorum_get_topology)
     {
-        init_variorum_get_topology = 1;
+        //init_variorum_get_topology = 1;
 
         // hwloc should give us expected results on any reasonable arch.
         // If something goes wrong, there's no sense in trying to keep
@@ -171,7 +168,7 @@ void variorum_get_topology(unsigned *nsockets, unsigned *ncores,
             exit(-1);
         }
 
-        g_platform.num_sockets = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_SOCKET);
+        g_platform[idx].num_sockets = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_SOCKET);
         //-1 if Several levels exist with OBJ_SOCKET
         if (g_platform.num_sockets == -1)
         {
@@ -263,61 +260,67 @@ void variorum_get_topology(unsigned *nsockets, unsigned *ncores,
 
     if (nsockets != NULL)
     {
-        *nsockets = g_platform.num_sockets;
+        *nsockets = g_platform[idx].num_sockets;
     }
 
     if (ncores != NULL)
     {
-        *ncores = g_platform.total_cores;
+        *ncores = g_platform[idx].total_cores;
     }
 
     if (nthreads != NULL)
     {
-        *nthreads = g_platform.total_threads;
+        *nthreads = g_platform[idx].total_threads;
     }
 }
 
 void variorum_init_func_ptrs()
 {
-    g_platform.variorum_print_power_limits = NULL;
-    g_platform.variorum_cap_socket_frequency = NULL;
-    g_platform.variorum_cap_best_effort_node_power_limit = NULL;
-    g_platform.variorum_cap_and_verify_node_power_limit = NULL;
-    g_platform.variorum_cap_gpu_power_ratio = NULL;
-    g_platform.variorum_cap_each_socket_power_limit = NULL;
-    g_platform.variorum_print_features = NULL;
-    g_platform.variorum_print_thermals = NULL;
-    g_platform.variorum_print_counters = NULL;
-    g_platform.variorum_print_clocks = NULL;
-    g_platform.variorum_print_power = NULL;
-    g_platform.variorum_enable_turbo = NULL;
-    g_platform.variorum_disable_turbo = NULL;
-    g_platform.variorum_print_turbo = NULL;
-    g_platform.variorum_poll_power = NULL;
-    g_platform.variorum_print_gpu_utilization = NULL;
-    g_platform.variorum_cap_each_core_frequency = NULL;
-    g_platform.variorum_monitoring = NULL;
-    g_platform.variorum_get_node_power_json = NULL;
-    g_platform.variorum_print_available_frequencies = NULL;
+    int i = 0;
+    for (i = 0; i < 2; i++)
+    {
+        g_platform[i].variorum_dump_power_limits = NULL;
+        g_platform[i].variorum_set_best_effort_node_power_limit = NULL;
+        g_platform[i].variorum_set_and_verify_node_power_limit = NULL;
+        g_platform[i].variorum_set_gpu_power_ratio = NULL;
+        g_platform[i].variorum_set_each_socket_power_limit = NULL;
+        g_platform[i].variorum_print_features = NULL;
+        g_platform[i].variorum_dump_thermals = NULL;
+        g_platform[i].variorum_dump_counters = NULL;
+        g_platform[i].variorum_dump_clocks = NULL;
+        g_platform[i].variorum_dump_power = NULL;
+        g_platform[i].variorum_enable_turbo = NULL;
+        g_platform[i].variorum_disable_turbo = NULL;
+        g_platform[i].variorum_dump_turbo = NULL;
+        g_platform[i].variorum_poll_power = NULL;
+        g_platform[i].variorum_dump_gpu_utilization = NULL;
+        g_platform[i].variorum_cap_each_core_frequency = NULL;
+        g_platform[i].variorum_monitoring = NULL;
+        g_platform[i].variorum_get_node_power_json = NULL;
+    }
 }
 
 int variorum_set_func_ptrs()
 {
     int err = 0;
 
-#ifdef VARIORUM_WITH_INTEL
-    err = set_intel_func_ptrs();
+//#ifdef VARIORUM_WITH_INTEL
+//    err = set_intel_func_ptrs();
+//    if (err)
+//    {
+//        return err;
+//    }
+//    err = init_msr();
+//#endif
+#ifdef VARIORUM_WITH_IBM
+    err = set_ibm_func_ptrs(0);
+#endif
+#ifdef VARIORUM_WITH_NVIDIA
+    err = set_nvidia_func_ptrs(1);
     if (err)
     {
         return err;
     }
-    err = init_msr();
-#endif
-#ifdef VARIORUM_WITH_IBM
-    err = set_ibm_func_ptrs();
-#endif
-#ifdef VARIORUM_WITH_NVIDIA
-    err = set_nvidia_func_ptrs();
 #endif
 #ifdef VARIORUM_WITH_ARM
     err = set_arm_func_ptrs();
