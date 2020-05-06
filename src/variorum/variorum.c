@@ -61,10 +61,12 @@ int variorum_tester(void)
     }
     return err;
 }
+#endif
 
 int variorum_poll_power(FILE *output)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -74,18 +76,21 @@ int variorum_poll_power(FILE *output)
     {
         return -1;
     }
-    if (g_platform.variorum_poll_power == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_poll_power(output);
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].poll_power == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].poll_power(output);
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -102,6 +107,7 @@ int variorum_poll_power(FILE *output)
 int variorum_monitoring(FILE *output)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -111,18 +117,21 @@ int variorum_monitoring(FILE *output)
     {
         return -1;
     }
-    if (g_platform.variorum_monitoring == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_monitoring(output);
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].monitoring == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            return 0;
+        }
+        err = g_platform[i].monitoring(output);
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -264,6 +273,7 @@ void variorum_print_topology(void)
 int variorum_cap_best_effort_node_power_limit(int node_power_limit)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -273,18 +283,21 @@ int variorum_cap_best_effort_node_power_limit(int node_power_limit)
     {
         return -1;
     }
-    if (g_platform.variorum_cap_best_effort_node_power_limit == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_cap_best_effort_node_power_limit(node_power_limit);
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].variorum_cap_best_effort_node_power_limit == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_cap_best_effort_node_power_limit(node_power_limit);
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -298,7 +311,7 @@ int variorum_cap_best_effort_node_power_limit(int node_power_limit)
     return err;
 }
 
-
+#if 0
 int variorum_cap_and_verify_node_power_limit(int node_power_limit)
 {
     int err = 0;
