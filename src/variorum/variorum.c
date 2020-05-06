@@ -38,7 +38,6 @@ static void print_children(hwloc_topology_t topology, hwloc_obj_t obj,
     }
 }
 
-#if 0
 int variorum_tester(void)
 {
     int err = 0;
@@ -140,6 +139,7 @@ int variorum_monitoring(FILE *output)
 int variorum_print_power_limits(void)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -149,18 +149,21 @@ int variorum_print_power_limits(void)
     {
         return -1;
     }
-    if (g_platform.variorum_print_power_limits == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_power_limits(0);
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].variorum_print_power_limits == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_power_limits(0);
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -177,6 +180,7 @@ int variorum_print_power_limits(void)
 int variorum_print_verbose_power_limits(void)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -186,18 +190,21 @@ int variorum_print_verbose_power_limits(void)
     {
         return -1;
     }
-    if (g_platform.variorum_print_power_limits == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_power_limits(1);
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].variorum_print_power_limits == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_power_limits(1);
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -215,38 +222,41 @@ void variorum_print_topology(void)
 {
     hwloc_topology_t topo;
 
-    hwloc_topology_init(&topo);
-    hwloc_topology_load(topo);
-
-    variorum_get_topology(NULL, NULL, NULL);
-
-    fprintf(stdout, "=================\n");
-    fprintf(stdout, "Platform Topology\n");
-    fprintf(stdout, "=================\n");
-    fprintf(stdout, "  Hostname            : %s\n", g_platform.hostname);
-    fprintf(stdout, "  Num Sockets         : %d\n", g_platform.num_sockets);
-    fprintf(stdout, "  Num Cores per Socket: %d\n",
-            g_platform.num_cores_per_socket);
-    fprintf(stdout, "  Num Threads per Core: %d\n",
-            g_platform.num_threads_per_core);
-    if (g_platform.num_threads_per_core == 1)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        fprintf(stdout, "    Hyperthreading    : No\n");
-    }
-    else
-    {
-        fprintf(stdout, "    Hyperthreading    : Yes\n");
-    }
-    fprintf(stdout, "\n");
-    fprintf(stdout, "  Total Num of Cores  : %d\n", g_platform.total_cores);
-    fprintf(stdout, "  Total Num of Threads: %d\n", g_platform.total_threads);
-    fprintf(stdout, "\n");
-    fprintf(stdout, "Layout:\n");
-    fprintf(stdout, "-------\n");
-    fprintf(stdout, "Thread HWThread Core Socket\n");
-    print_children(topo, hwloc_get_root_obj(topo), 0);
+        hwloc_topology_init(&topo);
+        hwloc_topology_load(topo);
 
-    hwloc_topology_destroy(topo);
+        variorum_get_topology(NULL, NULL, NULL, i);
+
+        fprintf(stdout, "=================\n");
+        fprintf(stdout, "Platform Topology\n");
+        fprintf(stdout, "=================\n");
+        fprintf(stdout, "  Hostname            : %s\n", g_platform[i].hostname);
+        fprintf(stdout, "  Num Sockets         : %d\n", g_platform[i].num_sockets);
+        fprintf(stdout, "  Num Cores per Socket: %d\n",
+                g_platform[i].num_cores_per_socket);
+        fprintf(stdout, "  Num Threads per Core: %d\n",
+                g_platform[i].num_threads_per_core);
+        if (g_platform[i].num_threads_per_core == 1)
+        {
+            fprintf(stdout, "    Hyperthreading    : No\n");
+        }
+        else
+        {
+            fprintf(stdout, "    Hyperthreading    : Yes\n");
+        }
+        fprintf(stdout, "\n");
+        fprintf(stdout, "  Total Num of Cores  : %d\n", g_platform[i].total_cores);
+        fprintf(stdout, "  Total Num of Threads: %d\n", g_platform[i].total_threads);
+        fprintf(stdout, "\n");
+        fprintf(stdout, "Layout:\n");
+        fprintf(stdout, "-------\n");
+        fprintf(stdout, "Thread HWThread Core Socket\n");
+        print_children(topo, hwloc_get_root_obj(topo), 0);
+
+        hwloc_topology_destroy(topo);
+    }
 
     return;
 }
@@ -325,7 +335,6 @@ int variorum_cap_and_verify_node_power_limit(int node_power_limit)
     }
     return err;
 }
-
 
 int variorum_cap_gpu_power_ratio(int gpu_power_ratio)
 {
@@ -478,266 +487,6 @@ int variorum_cap_socket_frequency(int socketid, int socket_freq_mhz)
 int variorum_print_features(void)
 {
     int err = 0;
-#ifdef VARIORUM_LOG
-    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_enter();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    if (g_platform.variorum_print_features == NULL)
-    {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_features();
-    if (err)
-    {
-        return -1;
-    }
-#ifdef VARIORUM_LOG
-    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_exit();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    return err;
-}
-
-int variorum_print_thermals(void)
-{
-    int err = 0;
-#ifdef VARIORUM_LOG
-    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_enter();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    if (g_platform.variorum_print_thermals == NULL)
-    {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_thermals(0);
-    if (err)
-    {
-        return -1;
-    }
-#ifdef VARIORUM_LOG
-    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_exit();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    return err;
-}
-
-int variorum_print_verbose_thermals(void)
-{
-    int err = 0;
-#ifdef VARIORUM_LOG
-    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_enter();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    if (g_platform.variorum_print_thermals == NULL)
-    {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_thermals(1);
-    if (err)
-    {
-        return -1;
-    }
-#ifdef VARIORUM_LOG
-    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_exit();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    return err;
-}
-
-int variorum_print_counters(void)
-{
-    int err = 0;
-#ifdef VARIORUM_LOG
-    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_enter();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    if (g_platform.variorum_print_counters == NULL)
-    {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_counters(0);
-    if (err)
-    {
-        return -1;
-    }
-#ifdef VARIORUM_LOG
-    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_exit();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    return err;
-}
-
-int variorum_print_verbose_counters(void)
-{
-    int err = 0;
-#ifdef VARIORUM_LOG
-    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_enter();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    if (g_platform.variorum_print_counters == NULL)
-    {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_counters(1);
-    if (err)
-    {
-        return -1;
-    }
-#ifdef VARIORUM_LOG
-    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_exit();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    return err;
-}
-
-int variorum_print_clock_speed(void)
-{
-    int err = 0;
-#ifdef VARIORUM_LOG
-    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_enter();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    if (g_platform.variorum_print_clocks == NULL)
-    {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_clocks(0);
-    if (err)
-    {
-        return -1;
-    }
-#ifdef VARIORUM_LOG
-    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_exit();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    return err;
-}
-
-int variorum_print_verbose_clock_speed(void)
-{
-    int err = 0;
-#ifdef VARIORUM_LOG
-    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_enter();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    if (g_platform.variorum_print_clocks == NULL)
-    {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_clocks(1);
-    if (err)
-    {
-        return -1;
-    }
-#ifdef VARIORUM_LOG
-    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
-#else
-    err = variorum_exit();
-#endif
-    if (err)
-    {
-        return -1;
-    }
-    return err;
-}
-#endif
-
-int variorum_print_power(void)
-{
-    int err = 0;
     int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
@@ -748,17 +497,17 @@ int variorum_print_power(void)
     {
         return -1;
     }
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        if (g_platform[i].variorum_dump_power == NULL)
+        if (g_platform[i].variorum_print_features == NULL)
         {
             variorum_error_handler("Feature not yet implemented or is not supported",
                                    VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
                                    getenv("HOSTNAME"), __FILE__,
                                    __FUNCTION__, __LINE__);
-            return 0;
+            continue;
         }
-        err = g_platform[i].variorum_dump_power(0);
+        err = g_platform[i].variorum_print_features();
         if (err)
         {
             return -1;
@@ -776,10 +525,10 @@ int variorum_print_power(void)
     return err;
 }
 
-#if 0
-int variorum_print_verbose_power(void)
+int variorum_print_thermals(void)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -789,18 +538,308 @@ int variorum_print_verbose_power(void)
     {
         return -1;
     }
-    if (g_platform.variorum_print_power == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
+        if (g_platform[i].variorum_print_thermals == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_thermals(0);
+        if (err)
+        {
+            return -1;
+        }
     }
-    err = g_platform.variorum_print_power(1);
+#ifdef VARIORUM_LOG
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_exit();
+#endif
     if (err)
     {
         return -1;
+    }
+    return err;
+}
+
+int variorum_print_verbose_thermals(void)
+{
+    int err = 0;
+    int i;
+#ifdef VARIORUM_LOG
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_enter();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
+    {
+        if (g_platform[i].variorum_print_thermals == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_thermals(1);
+        if (err)
+        {
+            return -1;
+        }
+    }
+#ifdef VARIORUM_LOG
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_exit();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
+
+int variorum_print_counters(void)
+{
+    int err = 0;
+    int i;
+#ifdef VARIORUM_LOG
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_enter();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
+    {
+        if (g_platform[i].variorum_print_counters == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_counters(0);
+        if (err)
+        {
+            return -1;
+        }
+    }
+#ifdef VARIORUM_LOG
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_exit();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
+
+int variorum_print_verbose_counters(void)
+{
+    int err = 0;
+    int i;
+#ifdef VARIORUM_LOG
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_enter();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
+    {
+        if (g_platform[i].variorum_print_counters == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_counters(1);
+        if (err)
+        {
+            return -1;
+        }
+    }
+#ifdef VARIORUM_LOG
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_exit();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
+
+int variorum_print_clock_speed(void)
+{
+    int err = 0;
+    int i;
+#ifdef VARIORUM_LOG
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_enter();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
+    {
+        if (g_platform[i].variorum_print_clocks == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_clocks(0);
+        if (err)
+        {
+            return -1;
+        }
+    }
+#ifdef VARIORUM_LOG
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_exit();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
+
+int variorum_print_verbose_clock_speed(void)
+{
+    int err = 0;
+    int i;
+#ifdef VARIORUM_LOG
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_enter();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
+    {
+        if (g_platform[i].variorum_print_clocks == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_clocks(1);
+        if (err)
+        {
+            return -1;
+        }
+    }
+#ifdef VARIORUM_LOG
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_exit();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
+
+int variorum_print_power(void)
+{
+    int err = 0;
+    int i;
+#ifdef VARIORUM_LOG
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_enter();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
+    {
+        if (g_platform[i].variorum_print_power == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_power(0);
+        if (err)
+        {
+            return -1;
+        }
+    }
+#ifdef VARIORUM_LOG
+    err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_exit();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    return err;
+}
+
+int variorum_print_verbose_power(void)
+{
+    int err = 0;
+    int i;
+#ifdef VARIORUM_LOG
+    err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
+#else
+    err = variorum_enter();
+#endif
+    if (err)
+    {
+        return -1;
+    }
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
+    {
+        if (g_platform[i].variorum_print_power == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_power(1);
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -817,6 +856,7 @@ int variorum_print_verbose_power(void)
 int variorum_print_hyperthreading(void)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -826,16 +866,19 @@ int variorum_print_hyperthreading(void)
     {
         return -1;
     }
-    int hyperthreading = (g_platform.num_threads_per_core == 1) ? 0 : 1;
-    if (hyperthreading == 1)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        fprintf(stdout, "  Hyperthreading:       Enabled\n");
-        fprintf(stdout, "  Num Thread Per Core:  %d\n",
-                g_platform.num_threads_per_core);
-    }
-    else
-    {
-        fprintf(stdout, "  Hyperthreading:       Disabled\n");
+        int hyperthreading = (g_platform[i].num_threads_per_core == 1) ? 0 : 1;
+        if (hyperthreading == 1)
+        {
+            fprintf(stdout, "  Hyperthreading:       Enabled\n");
+            fprintf(stdout, "  Num Thread Per Core:  %d\n",
+                    g_platform[i].num_threads_per_core);
+        }
+        else
+        {
+            fprintf(stdout, "  Hyperthreading:       Disabled\n");
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -852,6 +895,7 @@ int variorum_print_hyperthreading(void)
 int variorum_print_turbo(void)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -861,18 +905,21 @@ int variorum_print_turbo(void)
     {
         return -1;
     }
-    if (g_platform.variorum_print_turbo == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_turbo();
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].variorum_print_turbo == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_turbo();
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -884,12 +931,12 @@ int variorum_print_turbo(void)
         return -1;
     }
     return err;
-
 }
 
 int variorum_print_gpu_utilization(void)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -899,18 +946,21 @@ int variorum_print_gpu_utilization(void)
     {
         return -1;
     }
-    if (g_platform.variorum_print_gpu_utilization == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_gpu_utilization(0);
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].variorum_print_gpu_utilization == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_gpu_utilization(0);
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -927,6 +977,7 @@ int variorum_print_gpu_utilization(void)
 int variorum_print_verbose_gpu_utilization(void)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -936,18 +987,21 @@ int variorum_print_verbose_gpu_utilization(void)
     {
         return -1;
     }
-    if (g_platform.variorum_print_gpu_utilization == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
-                               getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_gpu_utilization(1);
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].variorum_print_gpu_utilization == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
+                                   getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            continue;
+        }
+        err = g_platform[i].variorum_print_gpu_utilization(1);
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);

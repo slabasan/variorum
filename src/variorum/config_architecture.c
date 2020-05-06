@@ -38,15 +38,20 @@ int variorum_enter()
 #endif
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     printf("_LOG_VARIORUM_ENTER:%s:%s::%d\n", filename, func_name, line_num);
 #endif
 
+    printf("Number of registered platforms: %d\n", P_NUM_PLATFORMS);
+
     variorum_init_func_ptrs();
 
     //Triggers initialization on first call.  Errors assert.
-    variorum_get_topology(NULL, NULL, NULL, 0);
-    variorum_get_topology(NULL, NULL, NULL, 1);
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
+    {
+        variorum_get_topology(NULL, NULL, NULL, i);
+    }
     err = variorum_detect_arch();
     if (err)
     {
@@ -73,6 +78,7 @@ int variorum_exit()
 #endif
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     printf("_LOG_VARIORUM_EXIT:%s:%s::%d\n", filename, func_name, line_num);
 #endif
@@ -85,57 +91,57 @@ int variorum_exit()
     }
 #endif
 
-//#ifdef VARIORUM_WITH_INTEL
-//    free(g_platform.intel_arch);
-//#endif
-//#ifdef VARIORUM_WITH_AMD
-//    free(g_platform.amd_arch);
-//#endif
-#ifdef VARIORUM_WITH_IBM
-    free(g_platform[0].ibm_arch);
-#endif
-#ifdef VARIORUM_WITH_NVIDIA
-    free(g_platform[1].nvidia_arch);
-#endif
-#ifdef VARIORUM_WITH_ARM
-    free(g_platform.arm_arch);
-#endif
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
+    {
+        free(g_platform[i].arch_id);
+    }
 
     return err;
 }
 
 int variorum_detect_arch(void)
 {
-//#ifdef VARIORUM_WITH_INTEL
-//    g_platform.intel_arch = detect_intel_arch();
-//#endif
+    int i;
+#ifdef VARIORUM_WITH_INTEL
+    g_platform[P_INTEL_IDX].arch_id = detect_intel_arch();
+    printf("Intel -- idx%d\n", P_INTEL_IDX);
+#endif
 #ifdef VARIORUM_WITH_AMD
-    //g_platform.amd_arch = detect_amd_arch();
+    //g_platform[P_AMD_IDX].arch_id = detect_amd_arch();
+    //printf("AMD -- idx%d\n", idx);
 #endif
 #ifdef VARIORUM_WITH_IBM
-    g_platform[0].ibm_arch = detect_ibm_arch();
+    g_platform[P_IBM_IDX].arch_id = detect_ibm_arch();
+    printf("IBM -- idx%d\n", P_IBM_IDX);
 #endif
 #ifdef VARIORUM_WITH_NVIDIA
-    g_platform[1].nvidia_arch = detect_gpu_arch();
+    g_platform[P_NVIDIA_IDX].arch_id = detect_gpu_arch();
+    printf("Nvidia -- idx%d\n", P_NVIDIA_IDX);
 #endif
 #ifdef VARIORUM_WITH_ARM
     g_platform.arm_arch = detect_arm_arch();
 #endif
 
-//#if defined(VARIORUM_LOG) && defined(VARIORUM_WITH_INTEL)
-//    printf("Intel Model: 0x%lx\n", *g_platform.intel_arch);
-//#endif
+    // @todo Need to know what idx maps to which architecture
+#if defined(VARIORUM_LOG) && defined(VARIORUM_WITH_INTEL)
+    printf("Intel Model: 0x%lx\n", *g_platform[P_INTEL_IDX].arch_id);
+#endif
 #if defined(VARIORUM_LOG) && defined(VARIORUM_WITH_IBM)
-    printf("IBM Model: 0x%lx\n", *g_platform[0].ibm_arch);
+    printf("IBM Model: 0x%lx\n", *g_platform[P_IBM_IDX].arch_id);
+#endif
+#if defined(VARIORUM_LOG) && defined(VARIORUM_WITH_NVIDIA)
+    printf("Nvidia Model: 0x%lx\n", *g_platform[P_NVIDIA_IDX].arch_id);
 #endif
 
-    if (g_platform[0].ibm_arch     == NULL &&
-        g_platform[1].nvidia_arch  == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("No architectures detected", VARIORUM_ERROR_RUNTIME,
-                               getenv("HOSTNAME"), __FILE__, __FUNCTION__,
-                               __LINE__);
-        return VARIORUM_ERROR_UNSUPPORTED_ARCH;
+        if (g_platform[i].arch_id == NULL)
+        {
+            variorum_error_handler("No architectures detected", VARIORUM_ERROR_RUNTIME,
+                                   getenv("HOSTNAME"), __FILE__, __FUNCTION__,
+                                   __LINE__);
+            return VARIORUM_ERROR_UNSUPPORTED_ARCH;
+        }
     }
 
     return 0;
@@ -168,7 +174,8 @@ void variorum_get_topology(int *nsockets, int *ncores, int *nthreads, int idx)
             exit(-1);
         }
 
-        g_platform[idx].num_sockets = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_SOCKET);
+        g_platform[idx].num_sockets = hwloc_get_nbobjs_by_type(topology,
+                                      HWLOC_OBJ_SOCKET);
         //-1 if Several levels exist with OBJ_SOCKET
         if (g_platform.num_sockets == -1)
         {
@@ -277,7 +284,7 @@ void variorum_get_topology(int *nsockets, int *ncores, int *nthreads, int idx)
 void variorum_init_func_ptrs()
 {
     int i = 0;
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
         g_platform[i].variorum_dump_power_limits = NULL;
         g_platform[i].variorum_set_best_effort_node_power_limit = NULL;
@@ -304,19 +311,19 @@ int variorum_set_func_ptrs()
 {
     int err = 0;
 
-//#ifdef VARIORUM_WITH_INTEL
-//    err = set_intel_func_ptrs();
-//    if (err)
-//    {
-//        return err;
-//    }
-//    err = init_msr();
-//#endif
+#ifdef VARIORUM_WITH_INTEL
+    err = set_intel_func_ptrs(P_INTEL_IDX);
+    if (err)
+    {
+        return err;
+    }
+    err = init_msr();
+#endif
 #ifdef VARIORUM_WITH_IBM
-    err = set_ibm_func_ptrs(0);
+    err = set_ibm_func_ptrs(P_IBM_IDX);
 #endif
 #ifdef VARIORUM_WITH_NVIDIA
-    err = set_nvidia_func_ptrs(1);
+    err = set_nvidia_func_ptrs(P_NVIDIA_IDX);
     if (err)
     {
         return err;

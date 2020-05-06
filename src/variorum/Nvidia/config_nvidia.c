@@ -24,7 +24,7 @@ int set_nvidia_func_ptrs(int idx)
 {
     int err = 0;
 
-    if (*g_platform[idx].nvidia_arch == VOLTA)
+    if (*g_platform[idx].arch_id == VOLTA)
     {
         /* Initialize monitoring interfaces */
         g_platform[idx].variorum_dump_power           = volta_get_power;

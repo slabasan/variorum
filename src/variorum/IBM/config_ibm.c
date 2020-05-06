@@ -23,7 +23,7 @@ int set_ibm_func_ptrs(int idx)
 {
     int err = 0;
 
-    if (*g_platform[idx].ibm_arch == POWER9)
+    if (*g_platform[idx].arch_id == POWER9)
     {
         g_platform[idx].variorum_dump_power = p9_get_power;
         g_platform[idx].variorum_dump_power_limits = p9_get_power_limits;

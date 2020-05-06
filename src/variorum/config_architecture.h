@@ -78,6 +78,19 @@ enum nvidia_arch_e
 enum arm_arch_e
 {
     ARMV8 = 1, //ARM Juno
+}
+
+enum supported_platforms_e {
+#ifdef VARIORUM_WITH_INTEL
+    P_INTEL_IDX,
+#endif
+#ifdef VARIORUM_WITH_IBM
+    P_IBM_IDX,
+#endif
+#ifdef VARIORUM_WITH_NVIDIA
+    P_NVIDIA_IDX,
+#endif
+    P_NUM_PLATFORMS
 };
 
 /// @brief Platform-specific information.
@@ -210,19 +223,8 @@ struct platform
     /// @return Error code.
     int (*variorum_print_available_frequencies)(void);
 
-    /******************************/
-    /* Platform-Specific Topology */
-    /******************************/
-    /// @brief Unique family and model for Intel architectures.
-    uint64_t *intel_arch;
-    /// @brief Identifier for AMD architecture.
-    uint64_t *amd_arch;
-    /// @brief Identifier for IBM architecture.
-    uint64_t *ibm_arch;
-    /// @brief Identifier for NVIDIA architecture.
-    uint64_t *nvidia_arch;
-    /// @brief Identifier for ARM architecture.
-    uint64_t *arm_arch;
+    /// @brief Identifier for architecture.
+    uint64_t *arch_id;
 
     /// @brief Hostname.
     char hostname[1024];
