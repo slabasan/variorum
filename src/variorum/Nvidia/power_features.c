@@ -48,7 +48,7 @@ void shutdownNVML()
     nvmlShutdown();
 }
 
-void dump_power_data(int chipid, int verbose, FILE *output)
+void nvidia_dump_power_data(int chipid, int verbose, FILE *output)
 {
     unsigned int power;
     double value = 0.0;
@@ -81,7 +81,7 @@ void dump_power_data(int chipid, int verbose, FILE *output)
     }
 }
 
-void dump_thermal_data(int chipid, int verbose, FILE *output)
+void nvidia_dump_thermal_data(int chipid, int verbose, FILE *output)
 {
     unsigned int gpu_temp;
     int d;
@@ -115,7 +115,7 @@ void dump_thermal_data(int chipid, int verbose, FILE *output)
     /*!@todo: Print GPU memory temperature */
 }
 
-void dump_power_limits(int chipid, int verbose, FILE *output)
+void nvidia_dump_power_limits(int chipid, int verbose, FILE *output)
 {
     unsigned int power_limit;
     double value = 0.0;
@@ -149,7 +149,7 @@ void dump_power_limits(int chipid, int verbose, FILE *output)
     /*!@todo: Seperate interface for default power limits? */
 }
 
-void dump_clocks_data(int chipid, int verbose, FILE *output)
+void nvidia_dump_clocks_data(int chipid, int verbose, FILE *output)
 {
     unsigned int gpu_clock;
     int d;

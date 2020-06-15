@@ -20,13 +20,13 @@ void initNVML(void);
 
 void shutdownNVML(void);
 
-void dump_power_data(int chipid, int verbose, FILE *output);
+void nvidia_dump_power_data(int chipid, int verbose, FILE *output);
 
-void dump_thermal_data(int chipid, int verbose, FILE *output);
+void nvidia_dump_thermal_data(int chipid, int verbose, FILE *output);
 
-void dump_power_limits(int chipid, int verbose, FILE *output);
+void nvidia_dump_power_limits(int chipid, int verbose, FILE *output);
 
-void dump_clocks_data(int chipid, int verbose, FILE *output);
+void nvidia_dump_clocks_data(int chipid, int verbose, FILE *output);
 
 void dump_gpu_utilization(int chipid, int verbose, FILE *output);
 
