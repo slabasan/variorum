@@ -61,7 +61,6 @@ int variorum_tester(void)
     }
     return err;
 }
-#endif
 
 int variorum_poll_power(FILE *output)
 {
@@ -78,7 +77,7 @@ int variorum_poll_power(FILE *output)
     }
     for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        if (g_platform[i].poll_power == NULL)
+        if (g_platform[i].variorum_poll_power == NULL)
         {
             variorum_error_handler("Feature not yet implemented or is not supported",
                                    VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
@@ -86,7 +85,7 @@ int variorum_poll_power(FILE *output)
                                    __FUNCTION__, __LINE__);
             continue;
         }
-        err = g_platform[i].poll_power(output);
+        err = g_platform[i].variorum_poll_power(output);
         if (err)
         {
             return -1;
@@ -119,7 +118,7 @@ int variorum_monitoring(FILE *output)
     }
     for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        if (g_platform[i].monitoring == NULL)
+        if (g_platform[i].variorum_monitoring == NULL)
         {
             variorum_error_handler("Feature not yet implemented or is not supported",
                                    VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED,
@@ -127,7 +126,7 @@ int variorum_monitoring(FILE *output)
                                    __FUNCTION__, __LINE__);
             return 0;
         }
-        err = g_platform[i].monitoring(output);
+        err = g_platform[i].variorum_monitoring(output);
         if (err)
         {
             return -1;
@@ -270,7 +269,7 @@ void variorum_print_topology(void)
     return;
 }
 
-int variorum_cap_best_effort_node_power_limit(int node_power_limit)
+int variorum_cap_best_effort_node_power_limit(int *node_power_limits)
 {
     int err = 0;
     int i;
@@ -293,7 +292,7 @@ int variorum_cap_best_effort_node_power_limit(int node_power_limit)
                                    __FUNCTION__, __LINE__);
             continue;
         }
-        err = g_platform[i].variorum_cap_best_effort_node_power_limit(node_power_limit);
+        err = g_platform[i].variorum_cap_best_effort_node_power_limit(node_power_limits[i]);
         if (err)
         {
             return -1;
@@ -459,6 +458,7 @@ int variorum_cap_each_core_frequency_limit(int core_freq_mhz)
     }
     return err;
 }
+#endif
 
 int variorum_cap_socket_frequency(int socketid, int socket_freq_mhz)
 {
@@ -1028,6 +1028,7 @@ int variorum_print_verbose_gpu_utilization(void)
     return err;
 }
 
+#if 0
 int variorum_enable_turbo(void)
 {
     int err = 0;
@@ -1101,6 +1102,7 @@ int variorum_disable_turbo(void)
     }
     return err;
 }
+#endif
 
 int variorum_get_node_power_json(json_t *get_power_obj)
 {
@@ -1114,6 +1116,7 @@ int variorum_get_node_power_json(json_t *get_power_obj)
     {
         return -1;
     }
+#if 0
     if (g_platform.variorum_get_node_power_json == NULL)
     {
         variorum_error_handler("Feature not yet implemented or is not supported",
@@ -1127,6 +1130,7 @@ int variorum_get_node_power_json(json_t *get_power_obj)
     {
         return -1;
     }
+#endif
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -1175,3 +1179,5 @@ int variorum_print_available_frequencies(void)
     return err;
 }
 #endif
+=======
+>>>>>>> ec10c8b (rebase and fix build)

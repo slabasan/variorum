@@ -24,7 +24,7 @@ int get_max_non_turbo_ratio(off_t msr_platform_info, int *val)
     static uint64_t **raw_val = NULL;
     int max_non_turbo_ratio;
 
-    variorum_get_topology(&nsockets, NULL, NULL);
+    variorum_get_topology(&nsockets, NULL, NULL, 0);
     if (!init)
     {
         raw_val = (uint64_t **) malloc(nsockets * sizeof(uint64_t *));
@@ -423,7 +423,7 @@ int set_turbo_on(off_t msr_misc_enable, unsigned int turbo_mode_disable_bit)
     uint64_t mask = 0;
     uint64_t msr_val = 0;
 
-    variorum_get_topology(&nsockets, NULL, NULL);
+    variorum_get_topology(&nsockets, NULL, NULL, 0);
     /// Creates mask for turbo disable bit according to the architecture offset
     /// given.
     mask |= 1LL << turbo_mode_disable_bit;
@@ -468,7 +468,7 @@ int set_turbo_off(off_t msr_misc_enable, unsigned int turbo_mode_disable_bit)
     uint64_t mask = 0;
     uint64_t msr_val = 0;
 
-    variorum_get_topology(&nsockets, NULL, NULL);
+    variorum_get_topology(&nsockets, NULL, NULL, 0);
     /// Creates mask for turbo disable bit according to the architecture offset
     /// given.
     mask |= 1LL << turbo_mode_disable_bit;
@@ -514,7 +514,7 @@ int print_turbo_status(FILE *writedest, off_t msr_misc_enable,
     uint64_t mask = 0;
     uint64_t msr_val = 0;
 
-    variorum_get_topology(&nsockets, NULL, NULL);
+    variorum_get_topology(&nsockets, NULL, NULL, 0);
     mask |= 1LL << turbo_mode_disable_bit;
 
     for (socket = 0; socket < nsockets; socket++)

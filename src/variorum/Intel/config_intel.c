@@ -66,7 +66,7 @@ int set_intel_func_ptrs(int idx)
     g_platform[idx].variorum_cap_gpu_power_ratio = gpu_power_ratio_unimplemented;
 
     // Sandy Bridge 06_2A
-    if (*g_platform[idx].intel_arch == FM_06_2A)
+    if (*g_platform[idx].arch_id == FM_06_2A)
     {
         g_platform[idx].variorum_print_power_limits = fm_06_2a_get_power_limits;
         g_platform[idx].variorum_cap_each_socket_power_limit =
@@ -106,7 +106,7 @@ int set_intel_func_ptrs(int idx)
             fm_06_2d_get_frequencies;
     }
     // Ivy Bridge 06_3E
-    else if (*g_platform[idx].intel_arch == FM_06_3E)
+    else if (*g_platform[idx].arch_id == FM_06_3E)
     {
         g_platform[idx].variorum_print_power_limits = fm_06_3e_get_power_limits;
         g_platform[idx].variorum_cap_each_socket_power_limit =
@@ -127,7 +127,7 @@ int set_intel_func_ptrs(int idx)
             fm_06_3e_get_frequencies;
     }
     // Haswell 06_3F
-    else if (*g_platform[idx].intel_arch == FM_06_3F)
+    else if (*g_platform[idx].arch_id == FM_06_3F)
     {
         g_platform[idx].variorum_print_power_limits = fm_06_3f_get_power_limits;
         g_platform[idx].variorum_cap_each_socket_power_limit =
@@ -148,7 +148,7 @@ int set_intel_func_ptrs(int idx)
             fm_06_3f_get_frequencies;
     }
     // Broadwell 06_4F
-    else if (*g_platform[idx].intel_arch == FM_06_4F)
+    else if (*g_platform[idx].arch_id == FM_06_4F)
     {
         g_platform[idx].variorum_print_power_limits = fm_06_4f_get_power_limits;
         g_platform[idx].variorum_cap_each_socket_power_limit =
@@ -173,7 +173,7 @@ int set_intel_func_ptrs(int idx)
             fm_06_4f_get_frequencies;
     }
     // Skylake 06_55
-    else if (*g_platform.intel_arch == FM_06_55)
+    else if (*g_platform[idx].arch_id == FM_06_55)
     {
         g_platform[idx].variorum_print_power_limits = fm_06_55_get_power_limits;
         g_platform[idx].variorum_cap_each_socket_power_limit =
@@ -193,7 +193,7 @@ int set_intel_func_ptrs(int idx)
             fm_06_55_get_frequencies;
     }
     // Kaby Lake 06_9E
-    else if (*g_platform[idx].intel_arch == FM_06_9E)
+    else if (*g_platform[idx].arch_id == FM_06_9E)
     {
         g_platform[idx].variorum_print_power_limits = fm_06_9e_get_power_limits;
         g_platform[idx].variorum_cap_each_socket_power_limit =
