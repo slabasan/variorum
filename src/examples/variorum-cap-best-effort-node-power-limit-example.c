@@ -23,12 +23,12 @@ int main(int argc, char **argv)
     }
     else if (argc >= 2)
     {
-        num_power_limits = argc-2;
+        num_power_limits = argc - 2;
         node_pow_lim_watts = (int *) malloc(num_power_limits * sizeof(int));
         for (i = 1; i < argc; i++)
         {
-            node_pow_lim_watts[i-1] = atoi(argv[i]);
-            printf("Setting node %d to %dW.\n", i-1, node_pow_lim_watts[i-1]);
+            node_pow_lim_watts[i - 1] = atoi(argv[i]);
+            printf("Setting node %d to %dW.\n", i - 1, node_pow_lim_watts[i - 1]);
         }
         printf("Setting node to specified limits.\n");
     }

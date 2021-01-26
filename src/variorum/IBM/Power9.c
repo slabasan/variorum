@@ -401,7 +401,7 @@ int p9_get_node_power_json(json_t *get_power_obj)
     struct timeval tv;
     uint64_t ts;
 
-    variorum_get_topology(&nsockets, NULL, NULL);
+    variorum_get_topology(&nsockets, NULL, NULL, 0);
 
     gethostname(hostname, 1024);
     gettimeofday(&tv, NULL);

@@ -229,6 +229,7 @@ int variorum_print_verbose_power_limits(void)
 void variorum_print_topology(void)
 {
     hwloc_topology_t topo;
+    int i;
 
     for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
@@ -292,7 +293,8 @@ int variorum_cap_best_effort_node_power_limit(int *node_power_limits)
                                    __FUNCTION__, __LINE__);
             continue;
         }
-        err = g_platform[i].variorum_cap_best_effort_node_power_limit(node_power_limits[i]);
+        err = g_platform[i].variorum_cap_best_effort_node_power_limit(
+            node_power_limits[i]);
         if (err)
         {
             return -1;
@@ -1146,6 +1148,7 @@ int variorum_get_node_power_json(json_t *get_power_obj)
 int variorum_print_available_frequencies(void)
 {
     int err = 0;
+    int i;
 #ifdef VARIORUM_LOG
     err = variorum_enter(__FILE__, __FUNCTION__, __LINE__);
 #else
@@ -1155,17 +1158,20 @@ int variorum_print_available_frequencies(void)
     {
         return -1;
     }
-    if (g_platform.variorum_print_available_frequencies == NULL)
+    for (i = 0; i < P_NUM_PLATFORMS; i++)
     {
-        variorum_error_handler("Feature not yet implemented or is not supported",
-                               VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__,
-                               __FUNCTION__, __LINE__);
-        return 0;
-    }
-    err = g_platform.variorum_print_available_frequencies();
-    if (err)
-    {
-        return -1;
+        if (g_platform[i].variorum_print_available_frequencies == NULL)
+        {
+            variorum_error_handler("Feature not yet implemented or is not supported",
+                                   VARIORUM_ERROR_FEATURE_NOT_IMPLEMENTED, getenv("HOSTNAME"), __FILE__,
+                                   __FUNCTION__, __LINE__);
+            return 0;
+        }
+        err = g_platform[i].variorum_print_available_frequencies();
+        if (err)
+        {
+            return -1;
+        }
     }
 #ifdef VARIORUM_LOG
     err = variorum_exit(__FILE__, __FUNCTION__, __LINE__);
@@ -1178,6 +1184,3 @@ int variorum_print_available_frequencies(void)
     }
     return err;
 }
-#endif
-=======
->>>>>>> ec10c8b (rebase and fix build)
