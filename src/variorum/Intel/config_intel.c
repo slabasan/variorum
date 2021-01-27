@@ -86,7 +86,7 @@ int set_intel_func_ptrs(int idx)
         g_platform[idx].variorum_print_available_frequencies =
             fm_06_2a_get_frequencies;
     }
-    else if (*g_platform.intel_arch == FM_06_2D)
+    else if (*g_platform[idx].arch_id == FM_06_2D)
     {
         g_platform[idx].variorum_print_power_limits = fm_06_2d_get_power_limits;
         g_platform[idx].variorum_cap_each_socket_power_limit = fm_06_2d_cap_power_limits;
@@ -121,8 +121,8 @@ int set_intel_func_ptrs(int idx)
         g_platform[idx].variorum_disable_turbo = fm_06_3e_disable_turbo;
         g_platform[idx].variorum_poll_power = fm_06_3e_poll_power;
         g_platform[idx].variorum_monitoring = fm_06_3e_monitoring;
-        g_platform[idx].variorum_cap_each_core_frequency =
-            fm_06_3e_cap_frequency;
+        //g_platform[idx].variorum_cap_each_core_frequency =
+        //    fm_06_3e_set_frequency;
         g_platform[idx].variorum_print_available_frequencies =
             fm_06_3e_get_frequencies;
     }
