@@ -120,6 +120,7 @@ int variorum_detect_arch(void)
 #endif
 #ifdef VARIORUM_WITH_ARM
     g_platform.arm_arch = detect_arm_arch();
+    printf("ARM -- idx%d\n", P_ARM_IDX);
 #endif
 
     // @todo Need to know what idx maps to which architecture
@@ -131,6 +132,9 @@ int variorum_detect_arch(void)
 #endif
 #if defined(VARIORUM_LOG) && defined(VARIORUM_WITH_NVIDIA)
     printf("Nvidia Model: 0x%lx\n", *g_platform[P_NVIDIA_IDX].arch_id);
+#endif
+#if defined(VARIORUM_LOG) && defined(VARIORUM_WITH_ARM)
+    printf("Arm Model: 0x%lx\n", *g_platform[P_ARM_IDX].arch_id);
 #endif
 
     for (i = 0; i < P_NUM_PLATFORMS; i++)
