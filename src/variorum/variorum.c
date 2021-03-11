@@ -294,7 +294,7 @@ int variorum_cap_best_effort_node_power_limit(int *node_power_limits)
             continue;
         }
         err = g_platform[i].variorum_cap_best_effort_node_power_limit(
-            node_power_limits[i]);
+                  node_power_limits[i]);
         if (err)
         {
             return -1;
