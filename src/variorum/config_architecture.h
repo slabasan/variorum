@@ -78,7 +78,7 @@ enum nvidia_arch_e
 enum arm_arch_e
 {
     ARMV8 = 1, //ARM Juno
-}
+};
 
 enum supported_platforms_e
 {
