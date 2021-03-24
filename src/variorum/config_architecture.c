@@ -336,7 +336,7 @@ int variorum_set_func_ptrs()
     }
 #endif
 #ifdef VARIORUM_WITH_ARM
-    err = set_arm_func_ptrs();
+    err = set_arm_func_ptrs(P_ARM_IDX);
 #endif
     return err;
 }
